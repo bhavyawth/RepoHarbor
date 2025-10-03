@@ -1,5 +1,5 @@
 // backend/src/services/githubService.ts
-import { Octokit } from 'octokit';
+import { Octokit } from '@octokit/rest'; // Import Octokit from the REST client directly
 import axios from 'axios';
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
@@ -66,14 +66,15 @@ export const getRepoContents = async (
     owner: string,
     repo: string,
     path: string = '',
-    branch: string = 'main'
+    branch?: string
 ): Promise<RepoItem[]> => {
     try {
+      const usedBranch = branch || (await getRepoDetails(owner, repo)).default_branch;
         const response = await octokit.rest.repos.getContent({
             owner,
             repo,
             path,
-            ref: branch
+            ref: usedBranch, 
         });
 
         // ensure it's always an array for consistent processing.
@@ -99,12 +100,13 @@ export async function getFileContent(
     owner: string,
     repo: string,
     filePath: string,
-    branch: string = 'main'
+    branch?: string
 ): Promise<string> {
     try {
+      const usedBranch = branch || (await getRepoDetails(owner, repo)).default_branch;
         // the URL for raw file content on raw.githubusercontent.com
-        const url = `/${owner}/${repo}/${branch}/${filePath}`;
-
+        const url = `/${owner}/${repo}/${usedBranch}/${filePath}`;
+        console.log("Fetching raw content from URL:", url);
         // Get the raw text content of the file we give
         const response = await rawContentApiClient.get(url);
 

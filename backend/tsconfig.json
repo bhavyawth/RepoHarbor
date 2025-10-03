@@ -1,11 +1,18 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "CommonJS",
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "strict": true,
+    "target": "ES2022", // Or a recent ES version
+    "module": "NodeNext", // Crucial for modern Node.js module resolution
+    "moduleResolution": "NodeNext", // Crucial for modern Node.js module resolution
     "esModuleInterop": true,
-    "skipLibCheck": true
-  }
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "outDir": "./dist", // Where compiled JS will go
+    "rootDir": "./src", // Your source code directory
+    "allowImportingTsExtensions": true, // May be needed with NodeNext
+    "noEmit": true, // For tsx/ts-node, you might not want to emit JS files
+    "resolveJsonModule": true // Useful if you import JSON files
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules"]
 }
