@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import { getRepoDetails, getRepoContents, getFileContent } from '../services/githubService';
+import { chunkText } from "../services/chunkService";
 
 
 export const getRepoDetailsController = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { owner, repo } = req.params;
-
     const details = await getRepoDetails(owner, repo);
     if (!details) {
       return res.status(404).json({ message: 'Repository not found.' });
@@ -44,7 +44,7 @@ export const getFileContentController = async (req: Request, res: Response, next
   try {
     const { owner, repo, path } = req.params;
     
-    const filePathArray = path // ['src', 'app.css']
+    const filePathArray = path // ['src', 'app.css'] jaise aata hai
     const filePath = Array.isArray(filePathArray) ? filePathArray.join('/') : filePathArray;
     
     if (!filePath) {
@@ -63,5 +63,33 @@ export const getFileContentController = async (req: Request, res: Response, next
 
     console.error(`Error fetching file content for ${owner}/${repo}/${filePath} on branch ${branchStr}:`, error.message || error);
     res.status(500).json({ message: 'Failed to fetch file content.' });
+  }
+};
+
+export const getChunkedFileContentController = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { owner, repo, path } = req.params;
+    
+    const filePathArray = path // ['src', 'app.css'] jaise aata hai
+    const filePath = Array.isArray(filePathArray) ? filePathArray.join('/') : filePathArray;
+    
+    if (!filePath) {
+      return res.status(400).json({ message: 'File path is required.' });
+    }
+
+    const branchStr = (req.query.branch as string) || '';
+
+    const content = await getFileContent(owner, repo, filePath, branchStr);
+    const chunks = chunkText(content, `${owner}/${repo}`, filePath, 2000, 200); // default chunk size and overlap given
+
+    return res.status(200).json({
+      repo: repo,
+      filePath,
+      totalChunks: chunks.length,
+      chunks
+    });
+  } catch (error) {
+    console.error("Error in getChunkedFileContentController:", error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };

@@ -69,7 +69,7 @@ export const getRepoContents = async (
     branch?: string
 ): Promise<RepoItem[]> => {
     try {
-      const usedBranch = branch || (await getRepoDetails(owner, repo)).default_branch;
+        const usedBranch = branch || (await getRepoDetails(owner, repo)).default_branch;
         const response = await octokit.rest.repos.getContent({
             owner,
             repo,
@@ -103,10 +103,9 @@ export async function getFileContent(
     branch?: string
 ): Promise<string> {
     try {
-      const usedBranch = branch || (await getRepoDetails(owner, repo)).default_branch;
+        const usedBranch = branch || (await getRepoDetails(owner, repo)).default_branch;
         // the URL for raw file content on raw.githubusercontent.com
         const url = `/${owner}/${repo}/${usedBranch}/${filePath}`;
-        console.log("Fetching raw content from URL:", url);
         // Get the raw text content of the file we give
         const response = await rawContentApiClient.get(url);
 
