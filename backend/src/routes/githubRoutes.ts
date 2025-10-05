@@ -7,14 +7,24 @@ import {
 } from "../controllers/githubController";
 
 const router = Router();
-
-//Purpose: To fetch high-level information about a repository (name, description, stars, default branch).
-router.get('/repo-details/:owner/:repo', getRepoDetailsController); 
-//Purpose: To list the files and subdirectories within any part of the repository.
-router.get('/repo-contents/:owner/:repo', getRepoContentsController);
-//Purpose: To fetch the raw content of a specific file in the repository.
-router.get('/file-content/:owner/:repo/*path', getFileContentController);
-//Purpose: To fetch the raw content of a specific file in the repository and chunk it into smaller pieces.
-router.get('/chunk-file-content/:owner/:repo/*path', getChunkedFileContentController);
-
+/**
+ * @route   GET /api/github/repos/:owner/:repo
+ * @desc    Fetch high-level repository details (name, description, stars, default branch, etc.)
+ */
+router.get('/repos/:owner/:repo', getRepoDetailsController);
+/**
+ * @route   GET /api/github/repos/:owner/:repo/contents
+ * @desc    List files and directories within the repository
+ */
+router.get('/repos/:owner/:repo/contents/*folderPath', getRepoContentsController);
+/**
+ * @route   GET /api/github/repos/:owner/:repo/files/*path
+ * @desc    Fetch raw content of a specific file in the repository
+ */
+router.get('/repos/:owner/:repo/files/*filePath', getFileContentController);
+/**
+ * @route   GET /api/github/repos/:owner/:repo/files/*path/chunks
+ * @desc    Fetch raw content of a specific file and split it into chunks
+ */
+router.get('/repos/:owner/:repo/file-chunks/*filePath', getChunkedFileContentController);
 export default router;

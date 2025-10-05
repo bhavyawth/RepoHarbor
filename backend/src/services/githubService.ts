@@ -1,25 +1,29 @@
 // backend/src/services/githubService.ts
-import { Octokit } from '@octokit/rest'; // Import Octokit from the REST client directly
+import { Octokit } from '@octokit/rest';
 import axios from 'axios';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 if (!GITHUB_TOKEN) {
-    console.warn('GITHUB_TOKEN is not set.');
+    console.warn('GITHUB_TOKEN is not set. Requests may be rate-limited.');
 }
 
-// Octokit client for GitHub API calls as seen in rest api docs
 const octokit = new Octokit({ auth: GITHUB_TOKEN });
 
-// Axios client for raw file content (raw.githubusercontent.com) raw content deta hai
 const rawContentApiClient = axios.create({
     baseURL: 'https://raw.githubusercontent.com',
 });
-
-// Purpose: To interact with GitHub API for fetching high-level repository details
+// Helper for resolving branch if not provided
+async function resolveBranch(owner: string, repo: string, branch?: string) {
+    if (branch) return branch;
+    const repoDetails = await getRepoDetails(owner, repo);
+    return repoDetails.default_branch;
+}
+// Fetch high-level repository details
 export async function getRepoDetails(owner: string, repo: string): Promise<any> {
     try {
         const response = await octokit.rest.repos.get({ owner, repo });
-
         const {
             name,
             description,
@@ -31,7 +35,7 @@ export async function getRepoDetails(owner: string, repo: string): Promise<any> 
             updated_at,
             default_branch,
             topics,
-            license, 
+            license,
         } = response.data;
 
         return {
@@ -45,7 +49,9 @@ export async function getRepoDetails(owner: string, repo: string): Promise<any> 
             updated_at,
             default_branch,
             topics: topics || [],
-            license: license ? { key: license.key, name: license.name, url: license.html_url } : null, // Filter license
+            license: license
+                ? { key: license.key, name: license.name, url: license.html_url }
+                : null,
         };
     } catch (error: any) {
         if (error.status === 404) {
@@ -54,48 +60,43 @@ export async function getRepoDetails(owner: string, repo: string): Promise<any> 
         throw new Error(`GitHub API error for ${owner}/${repo}: ${error.status || 500} - ${error.message || 'Unknown error'}`);
     }
 }
-
-// Purpose: To interact with GitHub API for fetching repository contents (files and directories)
-export interface RepoItem { 
+// Interface for repository contents
+export interface RepoItem {
     path: string;
     name: string;
     type: 'file' | 'dir';
 }
-
+// Fetch repository contents (files & directories)
 export const getRepoContents = async (
     owner: string,
     repo: string,
-    path: string = '',
+    folderPath: string = '',
     branch?: string
 ): Promise<RepoItem[]> => {
     try {
-        const usedBranch = branch || (await getRepoDetails(owner, repo)).default_branch;
+        const usedBranch = await resolveBranch(owner, repo, branch);
         const response = await octokit.rest.repos.getContent({
             owner,
             repo,
-            path,
-            ref: usedBranch, 
+            path: folderPath,
+            ref: usedBranch,
         });
-
-        // ensure it's always an array for consistent processing.
         const items = Array.isArray(response.data) ? response.data : [response.data];
-
         const contents: RepoItem[] = items.map((item: any) => ({
             path: item.path,
             name: item.name,
-            type: item.type === 'file' ? 'file' : 'dir', 
+            type: item.type === 'file' ? 'file' : 'dir',
         }));
 
-        return contents; // Array of files and directories (RepoItem objects)
+        return contents;
     } catch (error: any) {
         if (error.status === 404) {
-            throw new Error(`Path '${path}' in repository '${owner}/${repo}' not found.`);
+            throw new Error(`Path '${folderPath}' in repository '${owner}/${repo}' not found.`);
         }
         throw new Error(`GitHub API error: ${error.status || 500} - ${error.message || 'Unknown error'}`);
     }
 };
-
-// Purpose: To interact with GitHub API for fetching raw content of a specific file in the repository
+// Fetch raw content of a specific file
 export async function getFileContent(
     owner: string,
     repo: string,
@@ -103,22 +104,19 @@ export async function getFileContent(
     branch?: string
 ): Promise<string> {
     try {
-        const usedBranch = branch || (await getRepoDetails(owner, repo)).default_branch;
-        // the URL for raw file content on raw.githubusercontent.com
+        const usedBranch = await resolveBranch(owner, repo, branch);
         const url = `/${owner}/${repo}/${usedBranch}/${filePath}`;
-        // Get the raw text content of the file we give
         const response = await rawContentApiClient.get(url);
-
-        return response.data; // Raw content is directly in response.data for this endpoint
+        return response.data;
     } catch (error: any) {
-        // Check if the error is an Axios error and has a response (HTTP error)
+        const usedBranch = await resolveBranch(owner, repo, branch); 
         if (axios.isAxiosError(error) && error.response) {
             if (error.response.status === 404) {
-                throw new Error(`File '${filePath}' not found in '${owner}/${repo}' on branch '${branch}'.`);
+                throw new Error(`File '${filePath}' not found in '${owner}/${repo}' on branch '${usedBranch}'.`);
             }
-            // For other HTTP errors
-            throw new Error(`Failed to fetch file content from raw.githubusercontent.com: ${error.response.status} - ${error.response.statusText}`);
+            throw new Error(`Failed to fetch file content: ${error.response.status} - ${error.response.statusText} (branch: ${usedBranch})`);
         }
         throw new Error(`Network or unknown error fetching file content: ${error.message || 'Unknown error'}`);
     }
 }
+
