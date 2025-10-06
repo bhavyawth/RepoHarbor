@@ -23,6 +23,7 @@ export const getRepoContentsController = async (req: Request, res: Response) => 
     try {
         const { owner, repo } = req.params;
         let folderPath = req.params.folderPath;
+        if (!folderPath) folderPath = '';
         if (Array.isArray(folderPath)) {
             folderPath = folderPath.join('/');
         }
