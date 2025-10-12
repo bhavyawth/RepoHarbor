@@ -1,4 +1,4 @@
-interface TextChunk {
+export interface TextChunk {
   repo: string;
   filepath: string;
   content: string;
