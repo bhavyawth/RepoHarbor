@@ -14,7 +14,11 @@
   "description": "",
   "devDependencies": {
     "@types/express": "^5.0.3",
+    "@types/express-session": "^1.18.2",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.6.2",
+    "@types/passport": "^1.0.17",
+    "@types/passport-github2": "^1.2.9",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "tsx": "^4.20.6",
@@ -26,6 +30,11 @@
     "@octokit/rest": "^22.0.0",
     "axios": "^1.12.2",
     "dotenv": "^17.2.3",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.19.2",
+    "passport": "^0.7.0",
+    "passport-github2": "^0.1.12"
   }
 }
