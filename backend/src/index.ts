@@ -3,6 +3,7 @@ import connectDB from "./config/db";
 import session from 'express-session';
 import passport from 'passport';
 import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
 import githubRoutes from './routes/githubRoutes';
 import authRoutes from './routes/authRoutes';
 
@@ -11,6 +12,7 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(cookieParser());
 app.use(
   session({
     secret: process.env.SESSION_SECRET!,

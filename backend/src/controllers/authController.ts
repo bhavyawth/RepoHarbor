@@ -1,11 +1,12 @@
 import { Request, Response } from "express";
 import axios from "axios";
-import { generateJwtToken } from "../services/auth/jwt";
+import { generateAccessJwtToken, generateRefreshJwtToken, verifyRefreshJwtToken } from "../services/auth/jwt";
 import { IUser, User } from "../models/userModel";
 
 const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID!;
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET!;
 const GITHUB_CALLBACK_URL = process.env.GITHUB_CALLBACK_URL!;
+const FRONTEND_URL = process.env.FRONTEND_URL!; //todo : add this in the later stages
 
 export const redirectToGitHub = (req: Request, res: Response) => {
   const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${GITHUB_CALLBACK_URL}&scope=user:email`;
@@ -28,14 +29,14 @@ export const githubCallback = async (req: Request, res: Response) => {
       { headers: { Accept: "application/json" } }
     );
 
-    const accessToken = tokenResponse.data.access_token;
-    if (!accessToken) return res.status(400).json({ message: "Failed to obtain access token from GitHub." });
+    const githubAccessToken = tokenResponse.data.access_token;
+    if (!githubAccessToken) return res.status(400).json({ message: "Failed to obtain access token from GitHub." });
 
     const userResponse = await axios.get("https://api.github.com/user", {
-      headers: { Authorization: `Bearer ${accessToken}` },
+      headers: { Authorization: `Bearer ${githubAccessToken}` },
     });
     const emailResponse = await axios.get("https://api.github.com/user/emails", {
-      headers: { Authorization: `Bearer ${accessToken}` },
+      headers: { Authorization: `Bearer ${githubAccessToken}` },
     });
 
     const githubUserdata = userResponse.data;
@@ -56,10 +57,80 @@ export const githubCallback = async (req: Request, res: Response) => {
       await user.save();
     }
 
-    const jwt = generateJwtToken(user);
-    return res.status(200).json({ token: jwt, user });
+    const accessToken = generateAccessJwtToken(user);
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: Number(process.env.ACCESS_JWT_EXPIRATION)*24*60*60*1000, // in ms
+    })
+    const refreshToken = generateRefreshJwtToken(user);
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: Number(process.env.REFRESH_JWT_EXPIRATION)*24*60*60*1000, // in ms
+    });
+    // return res.redirect(`${FRONTEND_URL}/auth-success`);
+    return res.status(200).json({ message: "Authentication successful" });
   } catch (error: any) {
     console.error("GitHub OAuth error:", error.message);
     return res.status(500).json({ error: "GitHub authentication failed" });
+  }
+};
+
+export const logout = async (req: Request, res: Response) => {
+  try {
+    await User.findByIdAndUpdate(req.user?.id, { $inc: { tokenVersion: 1 } });
+    res.clearCookie("accessToken", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax" });
+    res.clearCookie("refreshToken", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax" });
+    // TODO: return res.redirect(`${FRONTEND_URL}/logout-success`);
+    return res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    console.error("Logout error:", error);
+    return res.status(500).json({ message: "Logout failed" });
+  }
+};
+
+export const refreshToken = async (req: Request, res: Response) => {
+  try {
+    const refreshToken = req.cookies?.refreshToken;
+    if (!refreshToken) return res.status(401).json({ message: "No refresh token provided" });
+
+    const decoded: any = verifyRefreshJwtToken(refreshToken);
+    const user = await User.findById(decoded.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    if (decoded.tokenVersion !== user.tokenVersion) return res.status(401).json({ message: "Invalid refresh token" });
+
+    const newAccessToken = generateAccessJwtToken(user);
+    const newRefreshToken = generateRefreshJwtToken(user);
+    res.cookie("accessToken", newAccessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: Number(process.env.ACCESS_JWT_EXPIRATION)*24*60*60*1000, // in ms
+    });
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: Number(process.env.REFRESH_JWT_EXPIRATION)*24*60*60*1000, // in ms
+    });
+    return res.status(200).json({ message: "Token refreshed successfully" });
+  } catch (error) {
+    console.error("Refresh token error:", error);
+    return res.status(500).json({ message: "Failed to refresh token" });
+  }
+}
+
+export const getCurrentUser = async (req: Request, res: Response) => {
+  try {
+    if (!req.user) return res.status(401).json({ message: "Not authenticated" });
+    const user = await User.findById(req.user.id).select("-__v"); 
+    if (!user) return res.status(404).json({ message: "User not found" });
+    return res.status(200).json({ user });
+  } catch (error) {
+    console.error("Get current user error:", error);
+    return res.status(500).json({ message: "Failed to fetch user" });
   }
 };
