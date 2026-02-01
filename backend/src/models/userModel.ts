@@ -1,28 +1,55 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, InferSchemaType, HydratedDocument } from 'mongoose';
 
-export interface IUser extends Document {
-  _id: string;
-  githubId: string;
-  username: string;
-  displayName?: string;
-  profileUrl?: string;
-  avatarUrl?: string;
-  email?: string;
-  tokenVersion: number;
-  lastLogin?: Date;
-}
+const UserSchema = new Schema(
+  {
+    githubId: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
+    username: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    displayName: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+    profileUrl: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+    avatarUrl: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+    email: {
+      type: String,
+      default: null,
+      trim: true,
+      lowercase: true,
+    },
+    tokenVersion: {
+      type: Number,
+      required: true,
+      default: 0,
+      min: 0,
+    },
+    lastLogin: {
+      type: Date,
+      default: null,
+    },
+  },
+  { timestamps: true }
+);
 
-const userSchema = new Schema<IUser>({
-  githubId: { type: String, required: true, unique: true },
-  username: { type: String, required: true },
-  displayName: String,
-  profileUrl: String,
-  avatarUrl: String,
-  email: String,
-  tokenVersion: { type: Number, default: 0 },
-  lastLogin: { type: Date },
-}, {
-  timestamps: true,
-});
+export type UserDocType = InferSchemaType<typeof UserSchema>;
+export type UserDocument = HydratedDocument<UserDocType>;
 
-export const User = mongoose.model<IUser>('User', userSchema);
+const User = mongoose.model<UserDocument>('User', UserSchema);
+export default User;

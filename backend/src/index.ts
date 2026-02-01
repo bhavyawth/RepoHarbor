@@ -6,12 +6,14 @@ import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import githubRoutes from './routes/githubRoutes';
 import authRoutes from './routes/authRoutes';
+import repoRoutes from './routes/repoRoutes';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(express.json());
 app.use(cookieParser());
 app.use(
   session({
@@ -26,7 +28,7 @@ app.use(passport.session());
 
 app.use('/api/github', githubRoutes);
 app.use('/api/auth', authRoutes);
-
+app.use('/api/repos', repoRoutes);
 //todo: remove in production
 app.get('/profile', (req, res) => {
   if (!req.isAuthenticated || !req.isAuthenticated()) return res.status(401).send('Unauthorized');

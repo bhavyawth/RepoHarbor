@@ -1,4 +1,4 @@
-import { IUser } from "../../models/userModel";
+import { UserDocument } from "../../models/userModel";
 import jwt, { Secret, SignOptions } from "jsonwebtoken";
 import dotenv from "dotenv";
 dotenv.config();
@@ -10,7 +10,7 @@ const REFRESH_JWT_SECRET: Secret = process.env.REFRESH_JWT_SECRET!;
 const REFRESH_JWT_EXPIRATION: number = Number(process.env.REFRESH_JWT_EXPIRATION)*60*60*24; // in days
 if (!REFRESH_JWT_SECRET) throw new Error("REFRESH_JWT_SECRET is not defined in environment variables");
 
-export const generateAccessJwtToken = (user: IUser): string => {
+export const generateAccessJwtToken = (user: UserDocument): string => {
   try {
     const payload = {
       id: user._id.toString(),
@@ -34,7 +34,7 @@ export const verifyAccessJwtToken = (token: string) => {
   }
 };
 
-export const generateRefreshJwtToken = (user: IUser): string => {
+export const generateRefreshJwtToken = (user: UserDocument): string => {
   try {
     const payload = {
       id: user._id.toString(),

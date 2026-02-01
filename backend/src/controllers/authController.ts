@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import axios from "axios";
 import { generateAccessJwtToken, generateRefreshJwtToken, verifyRefreshJwtToken } from "../services/auth/jwt";
-import { IUser, User } from "../models/userModel";
+import User, { UserDocument } from "../models/userModel";
 
 const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID!;
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET!;
@@ -42,7 +42,7 @@ export const githubCallback = async (req: Request, res: Response) => {
     const githubUserdata = userResponse.data;
     const primaryEmail = emailResponse.data.find((email: any) => email.primary)?.email || githubUserdata.email;
 
-    let user: IUser | null = await User.findOne({ githubId: githubUserdata.id });
+    let user: UserDocument | null = await User.findOne({ githubId: githubUserdata.id });
     if (!user) {
       user = new User({
         githubId: githubUserdata.id,
@@ -71,6 +71,7 @@ export const githubCallback = async (req: Request, res: Response) => {
       sameSite: "lax",
       maxAge: Number(process.env.REFRESH_JWT_EXPIRATION)*24*60*60*1000, // in ms
     });
+    // todo: add frontend url
     // return res.redirect(`${FRONTEND_URL}/auth-success`);
     return res.status(200).json({ message: "Authentication successful" });
   } catch (error: any) {

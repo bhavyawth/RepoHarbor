@@ -89,3 +89,5 @@ export function findSimilarChunks(queryEmbedding: number[], embeddedChunks: Embe
 function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+//todo: replace with vectorSearch from mongodb in future

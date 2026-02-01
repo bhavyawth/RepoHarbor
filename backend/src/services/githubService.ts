@@ -67,12 +67,7 @@ export interface RepoItem {
     type: 'file' | 'dir';
 }
 // Fetch repository contents (files & directories)
-export const getRepoContents = async (
-    owner: string,
-    repo: string,
-    folderPath: string = '',
-    branch?: string
-): Promise<RepoItem[]> => {
+export const getRepoContents = async (owner: string, repo: string, folderPath: string = '', branch?: string): Promise<RepoItem[]> => {
     try {
         const usedBranch = await resolveBranch(owner, repo, branch);
         const response = await octokit.rest.repos.getContent({
@@ -87,7 +82,6 @@ export const getRepoContents = async (
             name: item.name,
             type: item.type === 'file' ? 'file' : 'dir',
         }));
-
         return contents;
     } catch (error: any) {
         if (error.status === 404) {
@@ -97,12 +91,7 @@ export const getRepoContents = async (
     }
 };
 // Fetch raw content of a specific file
-export async function getFileContent(
-    owner: string,
-    repo: string,
-    filePath: string,
-    branch?: string
-): Promise<string> {
+export async function getFileContent(owner: string, repo: string, filePath: string, branch?: string): Promise<string> {
     try {
         const usedBranch = await resolveBranch(owner, repo, branch);
         const url = `/${owner}/${repo}/${usedBranch}/${filePath}`;
@@ -120,3 +109,23 @@ export async function getFileContent(
     }
 }
 
+export function parseGitHubUrl(url: string): { owner: string; name: string } | null {
+  try {
+    const parsed = new URL(url);
+
+    // Must be github.com
+    if (parsed.hostname !== "github.com") return null;
+
+    // Split path, filter out empty segments
+    // e.g. "/vercel/next.js" → ["vercel", "next.js"]
+    const segments = parsed.pathname.split("/").filter(Boolean);
+
+    // Must have exactly owner and name, nothing more
+    if (segments.length !== 2) return null;
+
+    const [owner, name] = segments;
+    return { owner: owner.toLowerCase(), name: name.toLowerCase() };
+  } catch (error: any) {
+    return null;
+  }
+}
