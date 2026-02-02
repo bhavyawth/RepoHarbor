@@ -4,13 +4,17 @@ import {
   registerRepo,
   listRepos,
   deleteRepo,
+  ingestRepo,
+  chatWithRepo
 } from "../controllers/repoController";
 
 const router = Router();
-// All repo endpoints require authentication
-router.use(authenticateUser);
+
+router.use(authenticateUser); // All repo endpoints require authentication
 router.post("/", registerRepo);
 router.get("/", listRepos);
 router.delete("/:repoId", deleteRepo);
+router.post("/:repoId/ingest", ingestRepo);
+router.post("/:repoId/chat", chatWithRepo);
 
 export default router;

@@ -1,7 +1,13 @@
 import { Request, Response } from "express";
 import Repo from "../models/repoModel";
 import Chunk from "../models/chunkModel";
-import { getRepoDetails, parseGitHubUrl } from "../services/githubService"; // adjust import path to match your existing GitHub service
+import { getRepoDetails, parseGitHubUrl } from "../services/githubService";
+import { chunkText } from "../services/chunkService";
+import { findSimilarChunks, generateEmbedding, generateEmbeddingsForChunks } from "../services/embeddingService";
+import { shouldSkipPath, hasAllowedExtension, MAX_FILE_SIZE } from "../utils/fileFilter";
+import { getRepoContents, getFileContent } from "../services/githubService";
+import { generateAnswer } from "../services/llm/chatCompletion";
+
 // ============================================================
 // POST /repos — Register a repo
 // ============================================================
@@ -85,3 +91,108 @@ export const deleteRepo = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Failed to delete repository" });
   }
 };
+
+// ============================================================
+// POST /repos/:repoId/ingest — Ingest a repository
+// ============================================================
+async function collectAllFiles(owner: string, name: string, path: string = ""): Promise<string[]> {
+  const items = await getRepoContents(owner, name, path);
+  const files: string[] = [];
+  for (const item of items) {
+    if (shouldSkipPath(item.path)) continue;
+    if (item.type === "file" && hasAllowedExtension(item.path)) {
+      if (item.size && item.size <= MAX_FILE_SIZE) files.push(item.path);
+    } else if (item.type === "dir") {
+      const nested = await collectAllFiles(owner, name, item.path);
+      files.push(...nested);
+    }
+  }
+  return files;
+}
+
+export const ingestRepo = async (req: Request, res: Response) => {
+  const { repoId } = req.params;
+  const repo = await Repo.findById(repoId);
+  if (!repo) return res.status(404).json({ message: "Repo not found" });
+  if (repo.userId.toString() !== req.user!._id.toString()) {
+    return res.status(403).json({ message: "Not authorized" });
+  }
+
+  try {
+    await Repo.findByIdAndUpdate(repoId, { indexStatus: "indexing" });
+    await Chunk.deleteMany({ repoId: repo._id });
+    const filePaths = await collectAllFiles(repo.owner, repo.name);
+    const allChunks = [];
+    for (const filePath of filePaths) {
+      const content = await getFileContent(repo.owner, repo.name, filePath);
+      const chunks = chunkText(
+        content,
+        `${repo.owner}/${repo.name}`,
+        filePath
+      );
+      allChunks.push(...chunks);
+    }
+    const embeddedChunks = await generateEmbeddingsForChunks(allChunks);
+    const chunkDocs = embeddedChunks.map(ec => ({
+      repoId: repo._id,
+      filePath: ec.filepath,
+      content: ec.content,
+      startIndex: ec.startIndex,
+      chunkIndex: ec.chunkIndex,
+      embedding: ec.embedding,
+    }));
+    await Chunk.insertMany(chunkDocs);
+    await Repo.findByIdAndUpdate(repoId, {
+      indexStatus: "indexed",
+      lastIndexedAt: new Date(),
+      indexError: null,
+    });
+    return res.status(200).json({ message: "Ingestion complete" });
+  } catch (error: any) {
+    await Repo.findByIdAndUpdate(repoId, {
+      indexStatus: "failed",
+      indexError: error.message || "Unknown error",
+    });
+    return res.status(500).json({ message: "Ingestion failed", error: error.message });
+  }
+};
+
+// ============================================================
+// POST /repos/:repoId/chat — Chat with a repository
+// ============================================================
+export const chatWithRepo = async (req: Request, res: Response) => {
+  const { repoId } = req.params;
+  const { question, chatHistory } = req.body;
+  const safeHistory = Array.isArray(chatHistory)
+  ? chatHistory.slice(-6)
+  : [];
+  if (!question || typeof question !== "string") return res.status(400).json({ message: "Question is required" });
+  
+  try {
+    const repo = await Repo.findById(repoId);
+    if (!repo) return res.status(404).json({ message: "Repo not found" });
+    if (repo.userId.toString() !== req.user!._id.toString()) return res.status(403).json({ message: "Not authorized" });
+    if (repo.indexStatus !== "indexed") return res.status(400).json({ message: "Repo is not indexed yet" });
+    const questionEmbedding = await generateEmbedding(question);
+    const chunks = (await Chunk.find({ repoId })).map(c => ({
+      repo: repo.owner + "/" + repo.name,
+      content: c.content,
+      embedding: c.embedding,
+      filepath: c.filePath,
+      startIndex: c.startIndex,
+      chunkIndex: c.chunkIndex,
+    }));
+    const topKChunksWithSimilarity = findSimilarChunks(questionEmbedding, chunks, 5);
+    const context = topKChunksWithSimilarity
+      .map(c => `--- FILE: ${c.filepath} ---\n${c.content}`)
+      .join("\n\n");
+    const answer = await generateAnswer(
+      question,
+      context, 
+      safeHistory || []
+    );
+    return res.status(200).json({ answer });
+  } catch (error: any) {
+    return res.status(500).json({ message: "Failed to generate answer", error: error.message });
+  }
+}

@@ -65,6 +65,7 @@ export interface RepoItem {
     path: string;
     name: string;
     type: 'file' | 'dir';
+    size?: number;
 }
 // Fetch repository contents (files & directories)
 export const getRepoContents = async (owner: string, repo: string, folderPath: string = '', branch?: string): Promise<RepoItem[]> => {
@@ -81,6 +82,7 @@ export const getRepoContents = async (owner: string, repo: string, folderPath: s
             path: item.path,
             name: item.name,
             type: item.type === 'file' ? 'file' : 'dir',
+            size: item.size,
         }));
         return contents;
     } catch (error: any) {
@@ -110,22 +112,14 @@ export async function getFileContent(owner: string, repo: string, filePath: stri
 }
 
 export function parseGitHubUrl(url: string): { owner: string; name: string } | null {
-  try {
-    const parsed = new URL(url);
-
-    // Must be github.com
-    if (parsed.hostname !== "github.com") return null;
-
-    // Split path, filter out empty segments
-    // e.g. "/vercel/next.js" → ["vercel", "next.js"]
-    const segments = parsed.pathname.split("/").filter(Boolean);
-
-    // Must have exactly owner and name, nothing more
-    if (segments.length !== 2) return null;
-
-    const [owner, name] = segments;
-    return { owner: owner.toLowerCase(), name: name.toLowerCase() };
-  } catch (error: any) {
-    return null;
-  }
+    try {
+        const parsed = new URL(url);
+        if (parsed.hostname !== "github.com") return null; //should be github.com
+        const segments = parsed.pathname.split("/").filter(Boolean);
+        if (segments.length !== 2) return null; //only 2 segments in the array
+        const [owner, name] = segments;
+        return { owner: owner.toLowerCase(), name: name.toLowerCase() };
+    } catch (error: any) {
+        return null;
+    }
 }
