@@ -4,7 +4,7 @@ import Chunk from "../models/chunkModel";
 import { getRepoDetails, parseGitHubUrl } from "../services/githubService";
 import { chunkText } from "../services/chunkService";
 import { findSimilarChunks, generateEmbedding, generateEmbeddingsForChunks } from "../services/embeddingService";
-import { shouldSkipPath, hasAllowedExtension, MAX_FILE_SIZE } from "../utils/fileFilter";
+import { shouldSkipPath, hasAllowedExtension, MAX_FILE_SIZE, generateRepoStructure } from "../utils/fileUtils";
 import { getRepoContents, getFileContent } from "../services/githubService";
 import { generateAnswer } from "../services/llm/chatCompletion";
 
@@ -122,6 +122,9 @@ export const ingestRepo = async (req: Request, res: Response) => {
     await Repo.findByIdAndUpdate(repoId, { indexStatus: "indexing" });
     await Chunk.deleteMany({ repoId: repo._id });
     const filePaths = await collectAllFiles(repo.owner, repo.name);
+    // const filePaths = files.map(f => f.path);
+    const repoMap = generateRepoStructure(filePaths);
+    await Repo.findByIdAndUpdate(repoId, { repoMap });
     const allChunks = [];
     for (const filePath of filePaths) {
       const content = await getFileContent(repo.owner, repo.name, filePath);
@@ -132,6 +135,7 @@ export const ingestRepo = async (req: Request, res: Response) => {
       );
       allChunks.push(...chunks);
     }
+    
     const embeddedChunks = await generateEmbeddingsForChunks(allChunks);
     const chunkDocs = embeddedChunks.map(ec => ({
       repoId: repo._id,
@@ -182,17 +186,20 @@ export const chatWithRepo = async (req: Request, res: Response) => {
       startIndex: c.startIndex,
       chunkIndex: c.chunkIndex,
     }));
-    const topKChunksWithSimilarity = findSimilarChunks(questionEmbedding, chunks, 5);
+    const topKChunksWithSimilarity = findSimilarChunks(questionEmbedding, chunks, 15);
     const context = topKChunksWithSimilarity
       .map(c => `--- FILE: ${c.filepath} ---\n${c.content}`)
       .join("\n\n");
     const answer = await generateAnswer(
       question,
       context, 
-      safeHistory || []
+      repo.repoMap,
+      safeHistory || [],
     );
     return res.status(200).json({ answer });
   } catch (error: any) {
     return res.status(500).json({ message: "Failed to generate answer", error: error.message });
   }
 }
+
+//todo: have a controller for ingestion bar using websockets in future

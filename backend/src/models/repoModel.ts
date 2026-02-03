@@ -37,6 +37,10 @@ const RepoSchema = new Schema(
       type: Date,
       default: null,
     },
+    repoMap: {
+      type: String,
+      default: null,
+    }
   },
   { timestamps: true }
 );
