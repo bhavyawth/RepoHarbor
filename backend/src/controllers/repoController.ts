@@ -7,21 +7,19 @@ import { findSimilarChunks, generateEmbedding, generateEmbeddingsForChunks } fro
 import { shouldSkipPath, hasAllowedExtension, MAX_FILE_SIZE, generateRepoStructure } from "../utils/fileUtils";
 import { getRepoContents, getFileContent } from "../services/githubService";
 import { generateAnswer } from "../services/llm/chatCompletion";
+import ChatMsg from "../models/chatMsgModel";
 
 // ============================================================
 // POST /repos — Register a repo
 // ============================================================
 export const registerRepo = async (req: Request, res: Response) => {
   const { repoUrl } = req.body;
-  if (!repoUrl || typeof repoUrl !== "string") {
-    return res.status(400).json({ message: "repoUrl is required" });
-  }
+  if (!repoUrl || typeof repoUrl !== "string") return res.status(400).json({ message: "repoUrl is required" });
   const parsed = parseGitHubUrl(repoUrl.trim());
-  if (!parsed) {
-    return res.status(400).json({ message: "Invalid GitHub URL. Expected format: https://github.com/owner/name" });
-  }
+  if (!parsed) return res.status(400).json({ message: "Invalid GitHub URL. Expected format: https://github.com/owner/name" });
   const { owner, name } = parsed;
   let repoDetails;
+
   try {
     repoDetails = await getRepoDetails(owner, name);
   } catch (error: any) {
@@ -77,9 +75,7 @@ export const deleteRepo = async (req: Request, res: Response) => {
   try {
     const { repoId } = req.params;
     const repo = await Repo.findById(repoId);
-    if (!repo) {
-      return res.status(404).json({ message: "Repo not found" });
-    }
+    if (!repo) return res.status(404).json({ message: "Repo not found" });
     if (repo.userId.toString() !== req.user!._id.toString()) { //does repo belong to user?
       return res.status(403).json({ message: "Not authorized to delete this repo" });
     }
@@ -114,9 +110,7 @@ export const ingestRepo = async (req: Request, res: Response) => {
   const { repoId } = req.params;
   const repo = await Repo.findById(repoId);
   if (!repo) return res.status(404).json({ message: "Repo not found" });
-  if (repo.userId.toString() !== req.user!._id.toString()) {
-    return res.status(403).json({ message: "Not authorized" });
-  }
+  if (repo.userId.toString() !== req.user!._id.toString()) return res.status(403).json({ message: "Not authorized" });
 
   try {
     await Repo.findByIdAndUpdate(repoId, { indexStatus: "indexing" });
@@ -196,6 +190,20 @@ export const chatWithRepo = async (req: Request, res: Response) => {
       repo.repoMap,
       safeHistory || [],
     );
+    //save the msgs
+    await ChatMsg.create({
+      repoId: repo._id,
+      role: "user",
+      content: question,
+      userId: req.user!._id,
+    });
+    await ChatMsg.create({
+      repoId: repo._id,
+      role: "assistant",
+      content: answer,
+      userId: req.user!._id,
+    });
+
     return res.status(200).json({ answer });
   } catch (error: any) {
     return res.status(500).json({ message: "Failed to generate answer", error: error.message });

@@ -7,14 +7,24 @@ import {
   ingestRepo,
   chatWithRepo
 } from "../controllers/repoController";
+import {
+  getChatHistory,
+  clearChatHistory,
+  getRepoSummary
+} from "../controllers/chatController";
 
 const router = Router();
 
 router.use(authenticateUser); // All repo endpoints require authentication
+//repo controller
 router.post("/", registerRepo);
 router.get("/", listRepos);
 router.delete("/:repoId", deleteRepo);
 router.post("/:repoId/ingest", ingestRepo);
-router.post("/:repoId/chat", chatWithRepo);
+router.post("/:repoId/messages", chatWithRepo);   
+//chat controller    
+router.get("/:repoId/messages", getChatHistory);      
+router.delete("/:repoId/messages", clearChatHistory); 
+router.get("/:repoId/summary", getRepoSummary);
 
 export default router;
