@@ -7,7 +7,7 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { data: user, isLoading, error } = useAuth();
+  const { data: user, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -16,6 +16,6 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
       </div>
     );
   }
-  if (error || !user) return <Navigate to="/chutiya" replace />;
+  if (!user) return <Navigate to="/" replace />;
   return <>{children}</>;
 }

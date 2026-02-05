@@ -5,8 +5,12 @@ export function useAuth() {
   return useQuery({
     queryKey: ["me"],
     queryFn: async () => {
-      const res = await api.get("/auth/me");
-      return res.data;
+      try {
+        const { data } = await api.get('/auth/me');
+        return data;
+      } catch (err) {
+        return null; 
+      }
     },
     retry: false,
   });
