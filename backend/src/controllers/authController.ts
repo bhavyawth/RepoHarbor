@@ -72,8 +72,8 @@ export const githubCallback = async (req: Request, res: Response) => {
       maxAge: Number(process.env.REFRESH_JWT_EXPIRATION)*24*60*60*1000, // in ms
     });
     // todo: add frontend url
-    // return res.redirect(`${FRONTEND_URL}/auth-success`);
-    return res.status(200).json({ message: "Authentication successful" });
+    return res.redirect(`${FRONTEND_URL}`);
+    // return res.status(200).json({ message: "Authentication successful" });
   } catch (error: any) {
     console.error("GitHub OAuth error:", error.message);
     return res.status(500).json({ error: "GitHub authentication failed" });

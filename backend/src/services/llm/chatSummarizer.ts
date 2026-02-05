@@ -40,6 +40,10 @@ export async function generateSummary(chatHistory: Array<{ role: "system" | "use
           content: systemPrompt(),
         },
         ...chatHistory, 
+        {
+          role: "user",
+          content: "Provide a concise technical summary of the above discussion.",
+        }
       ],
       model: "llama-3.3-70b-versatile",
       temperature: 0.1,
