@@ -4,7 +4,7 @@ import {
   getRepoDetailsController,
   getRepoContentsController,
   getFileContentController,
-  getChunkedFileContentController
+  // getChunkedFileContentController
 } from "../controllers/githubController";
 
 const router = Router();
@@ -12,6 +12,6 @@ router.get('/repos/:owner/:repo', authenticateUser, getRepoDetailsController);
 router.get("/repos/:owner/:repo/contents", getRepoContentsController);
 router.get('/repos/:owner/:repo/contents/*folderPath', authenticateUser, getRepoContentsController);
 router.get('/repos/:owner/:repo/files/*filePath', authenticateUser, getFileContentController);
-router.get('/repos/:owner/:repo/file-chunks/*filePath', authenticateUser, getChunkedFileContentController);
+// router.get('/repos/:owner/:repo/file-chunks/*filePath', authenticateUser, getChunkedFileContentController);
 
 export default router;

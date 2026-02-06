@@ -1,6 +1,6 @@
 // layouts/AppLayout.tsx
 import { Outlet } from 'react-router-dom';
-import { useAuth } from '../features/auth/useAuth';
+import { useAuth } from '../features/auth/auth.hooks';
 import Navbar from '../components/NavBar';
 import SideBar from '../components/SideBar';
 

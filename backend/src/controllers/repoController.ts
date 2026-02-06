@@ -4,8 +4,8 @@ import Chunk from "../models/chunkModel";
 import { getRepoDetails, parseGitHubUrl } from "../services/githubService";
 import { chunkText } from "../services/chunkService";
 import { findSimilarChunks, generateEmbedding, generateEmbeddingsForChunks } from "../services/embeddingService";
-import { shouldSkipPath, hasAllowedExtension, MAX_FILE_SIZE, generateRepoStructure } from "../utils/fileUtils";
-import { getRepoContents, getFileContent } from "../services/githubService";
+import { generateRepoStructure } from "../utils/fileUtils";
+import { getFileContent, collectAllFiles } from "../services/githubService";
 import { generateAnswer } from "../services/llm/chatCompletion";
 import ChatMsg from "../models/chatMsgModel";
 
@@ -91,20 +91,7 @@ export const deleteRepo = async (req: Request, res: Response) => {
 // ============================================================
 // POST /repos/:repoId/ingest — Ingest a repository
 // ============================================================
-async function collectAllFiles(owner: string, name: string, path: string = ""): Promise<string[]> {
-  const items = await getRepoContents(owner, name, path);
-  const files: string[] = [];
-  for (const item of items) {
-    if (shouldSkipPath(item.path)) continue;
-    if (item.type === "file" && hasAllowedExtension(item.path)) {
-      if (item.size && item.size <= MAX_FILE_SIZE) files.push(item.path);
-    } else if (item.type === "dir") {
-      const nested = await collectAllFiles(owner, name, item.path);
-      files.push(...nested);
-    }
-  }
-  return files;
-}
+
 
 export const ingestRepo = async (req: Request, res: Response) => {
   const { repoId } = req.params;
@@ -160,10 +147,15 @@ export const ingestRepo = async (req: Request, res: Response) => {
 // ============================================================
 export const chatWithRepo = async (req: Request, res: Response) => {
   const { repoId } = req.params;
-  const { question, chatHistory } = req.body;
+  const { question } = req.body;
+  const messages = await ChatMsg.find({ repoId })
+    .sort({ createdAt: -1 })
+    .limit(6)
+    .lean()
+  const chatHistory = messages.reverse()
   const safeHistory = Array.isArray(chatHistory)
-  ? chatHistory.slice(-6)
-  : [];
+    ? chatHistory.slice(-6)
+    : [];
   if (!question || typeof question !== "string") return res.status(400).json({ message: "Question is required" });
   
   try {
@@ -209,5 +201,24 @@ export const chatWithRepo = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Failed to generate answer", error: error.message });
   }
 }
+
+// ============================================================
+// GET /repos/:repoId/structure — Get the repository structure as a tree
+// =====================================================
+export const getRepoStructure = async (req: Request, res: Response) => {
+  const { repoId } = req.params;
+  if (!repoId) return res.status(400).json({ message: "Repo ID is required" });
+  const repo = await Repo.findById(repoId);
+  if (!repo) return res.status(404).json({ message: "Repo not found" });
+  if (repo.userId.toString() !== req.user!._id.toString()) return res.status(403).json({ message: "Not authorized" });
+  try {
+    const filePaths = await collectAllFiles(repo.owner, repo.name);
+    const structure = await generateRepoStructure(filePaths);
+    return res.status(200).json({ structure });
+  } catch (error: any) {
+    return res.status(500).json({ message: "Failed to generate repo structure", error: error.message });
+  }
+};
+
 
 //todo: have a controller for ingestion bar using websockets in future

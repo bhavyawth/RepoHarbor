@@ -1,4 +1,4 @@
-// backend/src/services/githubService.ts
+import { shouldSkipPath, hasAllowedExtension, MAX_FILE_SIZE, generateRepoStructure } from "../utils/fileUtils";
 import { Octokit } from '@octokit/rest';
 import axios from 'axios';
 import dotenv from 'dotenv';
@@ -122,4 +122,19 @@ export function parseGitHubUrl(url: string): { owner: string; name: string } | n
     } catch (error: any) {
         return null;
     }
+}
+
+export async function collectAllFiles(owner: string, name: string, path: string = ""): Promise<string[]> {
+    const items = await getRepoContents(owner, name, path);
+    const files: string[] = [];
+    for (const item of items) {
+        if (shouldSkipPath(item.path)) continue;
+        if (item.type === "file" && hasAllowedExtension(item.path)) {
+        if (item.size && item.size <= MAX_FILE_SIZE) files.push(item.path);
+        } else if (item.type === "dir") {
+        const nested = await collectAllFiles(owner, name, item.path);
+        files.push(...nested);
+        }
+    }
+    return files;
 }

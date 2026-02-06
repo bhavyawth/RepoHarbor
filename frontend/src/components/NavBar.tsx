@@ -1,5 +1,5 @@
 import { Code2, Pin, Trash2, LogOut, User } from 'lucide-react';
-import { useAuth } from '../features/auth/useAuth';
+import { useAuth } from '../features/auth/auth.hooks';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import { AnimatedThemeToggler } from './ui/animated-theme-toggler';

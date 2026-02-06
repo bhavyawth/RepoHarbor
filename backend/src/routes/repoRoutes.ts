@@ -5,7 +5,8 @@ import {
   listRepos,
   deleteRepo,
   ingestRepo,
-  chatWithRepo
+  chatWithRepo,
+  getRepoStructure
 } from "../controllers/repoController";
 import {
   getChatHistory,
@@ -21,7 +22,8 @@ router.post("/", registerRepo);
 router.get("/", listRepos);
 router.delete("/:repoId", deleteRepo);
 router.post("/:repoId/ingest", ingestRepo);
-router.post("/:repoId/messages", chatWithRepo);   
+router.post("/:repoId/messages", chatWithRepo); 
+router.get("/:repoId/structure", getRepoStructure);
 //chat controller    
 router.get("/:repoId/messages", getChatHistory);      
 router.delete("/:repoId/messages", clearChatHistory); 
