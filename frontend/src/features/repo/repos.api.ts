@@ -1,6 +1,7 @@
 import { api } from '../../api/client';
 
 export interface Repo {
+  isPinned: boolean;
   _id: string;
   owner: string;
   name: string;
@@ -53,5 +54,9 @@ export const reposApi = {
   getRepoStructure: async (repoId: string): Promise<RepoStructure> => {
     const { data } = await api.get(`/repos/${repoId}/structure`);
     return data;
+  },
+
+  pinRepo: async (repoId: string): Promise<void> => {
+    await api.patch(`/repos/${repoId}/pin`);
   }
 };

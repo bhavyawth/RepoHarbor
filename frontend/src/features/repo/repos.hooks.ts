@@ -1,4 +1,8 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { reposApi } from './repos.api';
 
 export const reposKeys = {
@@ -9,21 +13,20 @@ export const reposKeys = {
   structure: (id: string) => [...reposKeys.all, 'structure', id] as const,
 };
 
-export function useRepos() {
+export function useGetRepos() {
   return useQuery({
     queryKey: reposKeys.list(),
     queryFn: reposApi.getRepos,
-    staleTime: 2*60*1000,
+    staleTime: 2 * 60 * 1000,
   });
 }
 
-export function getRepoStructure() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: reposApi.getRepoStructure,
-    onSuccess: (_, repoId) => {
-      queryClient.invalidateQueries({ queryKey: reposKeys.structure(repoId) });
-    },
+export function useGetRepoStructure(repoId?: string) {
+  return useQuery({
+    queryKey: repoId ? reposKeys.structure(repoId) : reposKeys.structure(''),
+    queryFn: () => reposApi.getRepoStructure(repoId as string),
+    enabled: !!repoId,
+    staleTime: 5 * 60 * 1000,
   });
 }
 
@@ -58,11 +61,21 @@ export function useIngestRepo() {
   });
 }
 
-export function useRepoSummary(repoId: string, enabled = true) {
+export function useRepoSummary(repoId?: string) {
   return useQuery({
-    queryKey: reposKeys.summary(repoId),
-    queryFn: () => reposApi.getRepoSummary(repoId),
-    enabled: enabled && !!repoId,
-    staleTime: 10*60*1000,
+    queryKey: repoId ? reposKeys.summary(repoId) : reposKeys.summary(''),
+    queryFn: () => reposApi.getRepoSummary(repoId as string),
+    enabled: !!repoId,
+    staleTime: 10 * 60 * 1000,
+  });
+}
+
+export function usePinRepo() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: reposApi.pinRepo,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: reposKeys.list() });
+    },
   });
 }
