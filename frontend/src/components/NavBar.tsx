@@ -131,14 +131,6 @@ export default function Navbar() {
             <DropdownMenuContent align="center" className="w-56">
               <DropdownMenuItem
                 className="cursor-pointer gap-2"
-                onClick={() => navigate(`/app/${activeRepo?._id ?? ''}`)}
-                disabled={!activeRepo}
-              >
-                <FolderTree className="h-4 w-4" />
-                File Tree / Structure
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="cursor-pointer gap-2"
                 onClick={handleRepoInfo}
                 disabled={!activeRepo}
               >
