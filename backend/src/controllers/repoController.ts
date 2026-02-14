@@ -4,8 +4,8 @@ import Chunk from "../models/chunkModel";
 import { getRepoDetails, parseGitHubUrl } from "../services/githubService";
 import { chunkText } from "../services/chunkService";
 import { findSimilarChunks, generateEmbedding, generateEmbeddingsForChunks } from "../services/embeddingService";
-import { generateRepoStructure } from "../utils/fileUtils";
-import { getFileContent, collectAllFiles } from "../services/githubService";
+import { buildJsonTree, hasAllowedExtension, MAX_FILE_SIZE, shouldSkipPath, treeToPrompt } from "../utils/fileUtils";
+import { getFileContent, getRepoTree } from "../services/githubService";
 import { generateAnswer } from "../services/llm/chatCompletion";
 import ChatMsg from "../models/chatMsgModel";
 
@@ -98,13 +98,18 @@ export const ingestRepo = async (req: Request, res: Response) => {
   try {
     await Repo.findByIdAndUpdate(repoId, { indexStatus: "indexing" });
     await Chunk.deleteMany({ repoId: repo._id });
-    const filePaths = await collectAllFiles(repo.owner, repo.name);
-    // const filePaths = files.map(f => f.path);
-    const repoMap = generateRepoStructure(filePaths);
-    await Repo.findByIdAndUpdate(repoId, { repoMap });
+    const treeEntries = await getRepoTree(repo.owner, repo.name, repo.defaultBranch ?? undefined);
+    const filePaths = treeEntries
+      .filter((entry) => entry.type === "blob")
+      .filter((entry) => !shouldSkipPath(entry.path))
+      .filter((entry) => hasAllowedExtension(entry.path))
+      .filter((entry) => entry.size === undefined || entry.size <= MAX_FILE_SIZE)
+      .map((entry) => entry.path);
+    const repoTree = buildJsonTree(filePaths);
+    await Repo.findByIdAndUpdate(repoId, { repoTree });
     const allChunks = [];
     for (const filePath of filePaths) {
-      const content = await getFileContent(repo.owner, repo.name, filePath);
+      const content = await getFileContent(repo.owner, repo.name, filePath, repo.defaultBranch ?? undefined);
       const chunks = chunkText(
         content,
         `${repo.owner}/${repo.name}`,
@@ -171,10 +176,11 @@ export const chatWithRepo = async (req: Request, res: Response) => {
     const context = topKChunksWithSimilarity
       .map(c => `--- FILE: ${c.filepath} ---\n${c.content}`)
       .join("\n\n");
+    const repoTreePrompt = treeToPrompt(Array.isArray(repo.repoTree) ? repo.repoTree : []);
     const answer = await generateAnswer(
       question,
       context, 
-      repo.repoMap,
+      repoTreePrompt,
       safeHistory || [],
     );
     //save the msgs
@@ -206,9 +212,20 @@ export const getRepoStructure = async (req: Request, res: Response) => {
   if (!repo) return res.status(404).json({ message: "Repo not found" });
   if (repo.userId.toString() !== req.user!._id.toString()) return res.status(403).json({ message: "Not authorized" });
   try {
-    const filePaths = await collectAllFiles(repo.owner, repo.name);
-    const structure = await generateRepoStructure(filePaths);
-    return res.status(200).json({ structure });
+    if (Array.isArray(repo.repoTree) && repo.repoTree.length > 0) {
+      return res.status(200).json({ tree: repo.repoTree, structure: treeToPrompt(repo.repoTree) });
+    }
+
+    const treeEntries = await getRepoTree(repo.owner, repo.name, repo.defaultBranch ?? undefined);
+    const filePaths = treeEntries
+      .filter((entry) => entry.type === "blob")
+      .filter((entry) => !shouldSkipPath(entry.path))
+      .filter((entry) => hasAllowedExtension(entry.path))
+      .filter((entry) => entry.size === undefined || entry.size <= MAX_FILE_SIZE)
+      .map((entry) => entry.path);
+    const repoTree = buildJsonTree(filePaths);
+    await Repo.findByIdAndUpdate(repoId, { repoTree });
+    return res.status(200).json({ tree: repoTree, structure: treeToPrompt(repoTree) });
   } catch (error: any) {
     return res.status(500).json({ message: "Failed to generate repo structure", error: error.message });
   }

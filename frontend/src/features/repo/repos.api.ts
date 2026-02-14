@@ -10,7 +10,7 @@ export interface Repo {
   indexError?: string | null;
   defaultBranch?: string | null;
   lastIndexedAt?: string | null;
-  repoMap?: string;
+  repoTree?: RepoNode[] | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -23,7 +23,14 @@ export interface RepoSummary {
   summary: string;
 }
 
+export interface RepoNode {
+  name: string;
+  type: 'file' | 'folder';
+  children?: RepoNode[];
+}
+
 export interface RepoStructure {
+  tree: RepoNode[];
   structure: string;
 }
 

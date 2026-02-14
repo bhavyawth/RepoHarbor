@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
-import { getRepoDetails, getRepoContents, getFileContent } from "../services/githubService";
-import { chunkText } from "../services/chunkService";
+import { getRepoDetails, getFileContent } from "../services/githubService";
 /**
  * GET /repos/:owner/:repo
  * Fetch high-level repository details (name, description, stars, default branch, etc.)
@@ -12,26 +11,6 @@ export const getRepoDetailsController = async (req: Request, res: Response) => {
         return res.status(200).json(details);
     } catch (error) {
         console.error("Error in getRepoDetailsController:", error);
-        return res.status(500).json({ error: "Internal server error" });
-    }
-};
-/**
- * GET /repos/:owner/:repo/contents
- * List files and directories within the repository
- */
-export const getRepoContentsController = async (req: Request, res: Response) => {
-    try {
-        const { owner, repo } = req.params;
-        let folderPath = req.params.folderPath;
-        if (!folderPath) folderPath = '';
-        if (Array.isArray(folderPath)) {
-            folderPath = folderPath.join('/');
-        }
-        const branch = (req.query.branch as string) || undefined;
-        const contents = await getRepoContents(owner, repo, folderPath, branch);
-        return res.status(200).json(contents);
-    } catch (error) {
-        console.error("Error in getRepoContentsController:", error);
         return res.status(500).json({ error: "Internal server error" });
     }
 };

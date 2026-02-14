@@ -4,6 +4,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { reposApi } from './repos.api';
+import { useChatStore } from '../../store/chat.store';
 
 export const reposKeys = {
   all: ['repos'] as const,
@@ -27,6 +28,23 @@ export function useGetRepoStructure(repoId?: string) {
     queryFn: () => reposApi.getRepoStructure(repoId as string),
     enabled: !!repoId,
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useRepoStructure(repoId?: string) {
+  return useQuery({
+    queryKey: repoId ? reposKeys.structure(repoId) : reposKeys.structure(''),
+    queryFn: async () => {
+      const currentRepoId = repoId as string;
+      const cached = useChatStore.getState().repoStructuresById[currentRepoId];
+      if (cached) return cached;
+
+      const data = await reposApi.getRepoStructure(currentRepoId);
+      useChatStore.getState().setRepoStructure(currentRepoId, data);
+      return data;
+    },
+    enabled: !!repoId,
+    staleTime: Infinity,
   });
 }
 

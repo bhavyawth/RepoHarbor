@@ -1,9 +1,11 @@
 import { create } from "zustand"
-import type { Repo } from "../features/repo/repos.api"
+import type { Repo, RepoStructure } from "../features/repo/repos.api"
 
 interface ChatState {
   activeChatId: string | null
   setActiveChatId: (chat: string | null) => void
+  repoStructuresById: Record<string, RepoStructure>
+  setRepoStructure: (repoId: string, repoStructure: RepoStructure) => void
   repoInfoOpen: boolean
   setRepoInfoOpen: (open: boolean) => void
   repoInfoTarget: Repo | null
@@ -16,6 +18,15 @@ export const useChatStore = create<ChatState>((set) => ({
     set({
       activeChatId: chat,
     }),
+
+  repoStructuresById: {},
+  setRepoStructure: (repoId, repoStructure) =>
+    set((state) => ({
+      repoStructuresById: {
+        ...state.repoStructuresById,
+        [repoId]: repoStructure,
+      },
+    })),
 
   repoInfoOpen: false,
   setRepoInfoOpen: (open) =>

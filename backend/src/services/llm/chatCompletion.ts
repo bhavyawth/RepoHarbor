@@ -67,7 +67,7 @@ async function withRetry(fn: () => Promise<any>, retries = 3) {
 export async function generateAnswer(
   prompt: string, 
   retrievedChunks: string, //context snippets from controller
-  repoMap: string, //repo str
+  repoMapPrompt: string,
   chatHistory: Array<{ role: "system" | "user" | "assistant"; content: string }>
 ): Promise<string> {
   if (!prompt.trim()) throw new Error("User question cannot be empty");
@@ -80,7 +80,7 @@ export async function generateAnswer(
       messages: [
         {
           role: "system",
-          content: systemPrompt(retrievedChunks, repoMap),
+          content: systemPrompt(retrievedChunks, repoMapPrompt),
         },
         ...chatHistory, 
         { role: "user", content: prompt }, 

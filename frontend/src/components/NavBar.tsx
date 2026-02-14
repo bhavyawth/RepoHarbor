@@ -24,10 +24,12 @@ import {
   useDeleteRepo,
   useGetRepos,
   usePinRepo,
+  useRepoStructure,
   useSummarizeRepo,
 } from '../features/repo/repos.hooks';
 import { useClearChat } from '../features/chat/chat.hooks';
 import { useEffect, useState } from 'react';
+import { RepoStructurePanel } from './RepoStructurePanel';
 
 export default function Navbar() {
   const { data: user } = useAuth();
@@ -37,6 +39,7 @@ export default function Navbar() {
   const pinRepoMutation = usePinRepo();
   const deleteRepoMutation = useDeleteRepo();
   const [showSummaryPanel, setShowSummaryPanel] = useState(false);
+  const [showStructurePanel, setShowStructurePanel] = useState(false);
 
   const activeRepo = repos?.find((repo) => repo._id === activeChat) ?? null;
   const clearChatMutation = useClearChat(activeRepo?._id ?? '');
@@ -48,6 +51,12 @@ export default function Navbar() {
     error: repoSummaryErrorValue,
     reset: resetSummary,
   } = useSummarizeRepo();
+  const {
+    data: repoStructure,
+    isLoading: repoStructureLoading,
+    isError: repoStructureError,
+    error: repoStructureErrorValue,
+  } = useRepoStructure(showStructurePanel ? activeRepo?._id : undefined);
 
   const handleGithubLogin = () => {
     window.location.href = `http://localhost:3000/api/auth/github`;
@@ -78,12 +87,20 @@ export default function Navbar() {
 
   const handleRepoSummary = async () => {
     if (!activeRepo || repoSummaryLoading) return;
+    setShowStructurePanel(false);
     setShowSummaryPanel(true);
     await summarizeRepo(activeRepo._id);
   };
 
+  const handleRepoStructure = () => {
+    if (!activeRepo) return;
+    setShowSummaryPanel(false);
+    setShowStructurePanel(true);
+  };
+
   useEffect(() => {
     setShowSummaryPanel(false);
+    setShowStructurePanel(false);
     resetSummary();
   }, [activeRepo?._id, resetSummary]);
 
@@ -150,6 +167,14 @@ export default function Navbar() {
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="cursor-pointer gap-2"
+                onClick={handleRepoStructure}
+                disabled={!activeRepo}
+              >
+                <FolderTree className="h-4 w-4" />
+                Repo File Structure
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer gap-2"
                 onClick={handleClearChat}
                 disabled={!activeRepo}
               >
@@ -200,6 +225,16 @@ export default function Navbar() {
                 </p>
               )}
             </div>
+          )}
+          {showStructurePanel && activeRepo && (
+            <RepoStructurePanel
+              repoName={activeRepo.name}
+              isLoading={repoStructureLoading}
+              isError={repoStructureError}
+              error={repoStructureErrorValue}
+              tree={repoStructure?.tree}
+              onClose={() => setShowStructurePanel(false)}
+            />
           )}
         </div>
       )}

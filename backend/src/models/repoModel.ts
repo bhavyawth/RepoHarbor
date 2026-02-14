@@ -41,8 +41,8 @@ const RepoSchema = new Schema(
       type: Date,
       default: null,
     },
-    repoMap: {
-      type: String,
+    repoTree: {
+      type: [Schema.Types.Mixed],
       default: null,
     }
   },

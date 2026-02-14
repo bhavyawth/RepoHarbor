@@ -1,25 +1,24 @@
-import { shouldSkipPath, hasAllowedExtension, MAX_FILE_SIZE, generateRepoStructure } from "../utils/fileUtils";
-import { Octokit } from '@octokit/rest';
-import axios from 'axios';
-import dotenv from 'dotenv';
+import { Octokit } from "@octokit/rest";
+import axios from "axios";
+import dotenv from "dotenv";
 dotenv.config();
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 if (!GITHUB_TOKEN) {
-    console.warn('GITHUB_TOKEN is not set. Requests may be rate-limited.');
+    console.warn("GITHUB_TOKEN is not set. Requests may be rate-limited.");
 }
 
-const octokit = new Octokit({ auth: GITHUB_TOKEN });
+const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
-const rawContentApiClient = axios.create({
-    baseURL: 'https://raw.githubusercontent.com',
-});
+const rawContentApiClient = axios.create({ baseURL: "https://raw.githubusercontent.com" });
+
 // Helper for resolving branch if not provided
 async function resolveBranch(owner: string, repo: string, branch?: string) {
     if (branch) return branch;
-    const repoDetails = await getRepoDetails(owner, repo);
-    return repoDetails.default_branch;
+    const response = await octokit.rest.repos.get({ owner, repo });
+    return response.data.default_branch;
 }
+
 // Fetch high-level repository details
 export async function getRepoDetails(owner: string, repo: string): Promise<any> {
     try {
@@ -50,91 +49,83 @@ export async function getRepoDetails(owner: string, repo: string): Promise<any> 
             default_branch,
             topics: topics || [],
             license: license
-                ? { key: license.key, name: license.name, url: license.html_url }
-                : null,
+            ? { key: license.key, name: license.name, url: license.html_url }
+            : null,
         };
     } catch (error: any) {
-        if (error.status === 404) {
-            throw new Error(`Repository '${owner}/${repo}' not found.`);
-        }
-        throw new Error(`GitHub API error for ${owner}/${repo}: ${error.status || 500} - ${error.message || 'Unknown error'}`);
+        if (error.status === 404) throw new Error(`Repository '${owner}/${repo}' not found.`);
+        throw new Error(`GitHub API error for ${owner}/${repo}: ${error.status || 500} - ${error.message || "Unknown error"}`);
     }
 }
-// Interface for repository contents
-export interface RepoItem {
+
+export interface RepoTreeEntry {
     path: string;
-    name: string;
-    type: 'file' | 'dir';
+    type: "blob" | "tree" | "commit";
     size?: number;
 }
-// Fetch repository contents (files & directories)
-export const getRepoContents = async (owner: string, repo: string, folderPath: string = '', branch?: string): Promise<RepoItem[]> => {
+
+export async function getRepoTree(
+    owner: string,
+    repo: string,
+    branch?: string
+): Promise<RepoTreeEntry[]> {
     try {
         const usedBranch = await resolveBranch(owner, repo, branch);
-        const response = await octokit.rest.repos.getContent({
+        const response = await octokit.rest.git.getTree({
             owner,
             repo,
-            path: folderPath,
-            ref: usedBranch,
+            tree_sha: usedBranch,
+            recursive: "true",
         });
-        const items = Array.isArray(response.data) ? response.data : [response.data];
-        const contents: RepoItem[] = items.map((item: any) => ({
-            path: item.path,
-            name: item.name,
-            type: item.type === 'file' ? 'file' : 'dir',
-            size: item.size,
-        }));
-        return contents;
+        if (response.data.truncated) throw new Error(`GitHub tree response is truncated for '${owner}/${repo}'.`);
+        return (response.data.tree ?? [])
+            .map((item) => ({
+                path: item.path,
+                type: item.type as RepoTreeEntry["type"],
+                size: item.size,
+            }))
+            .filter((item) => !!item.path && !!item.type)
+            .filter(
+                (item) => item.type === "blob" || item.type === "tree" || item.type === "commit"
+            ) as RepoTreeEntry[];
     } catch (error: any) {
-        if (error.status === 404) {
-            throw new Error(`Path '${folderPath}' in repository '${owner}/${repo}' not found.`);
-        }
-        throw new Error(`GitHub API error: ${error.status || 500} - ${error.message || 'Unknown error'}`);
+        if (error.status === 404) throw new Error(`Repository '${owner}/${repo}' not found.`);
+        throw new Error(`GitHub API error for ${owner}/${repo}: ${error.status || 500} - ${error.message || "Unknown error"}`);
     }
-};
+}
+
 // Fetch raw content of a specific file
-export async function getFileContent(owner: string, repo: string, filePath: string, branch?: string): Promise<string> {
+export async function getFileContent(
+    owner: string,
+    repo: string,
+    filePath: string,
+    branch?: string
+): Promise<string> {
     try {
         const usedBranch = await resolveBranch(owner, repo, branch);
         const url = `/${owner}/${repo}/${usedBranch}/${filePath}`;
         const response = await rawContentApiClient.get(url);
         return response.data;
     } catch (error: any) {
-        const usedBranch = await resolveBranch(owner, repo, branch); 
+        const usedBranch = await resolveBranch(owner, repo, branch);
         if (axios.isAxiosError(error) && error.response) {
-            if (error.response.status === 404) {
-                throw new Error(`File '${filePath}' not found in '${owner}/${repo}' on branch '${usedBranch}'.`);
-            }
+            if (error.response.status === 404) throw new Error(`File '${filePath}' not found in '${owner}/${repo}' on branch '${usedBranch}'.`);
             throw new Error(`Failed to fetch file content: ${error.response.status} - ${error.response.statusText} (branch: ${usedBranch})`);
         }
-        throw new Error(`Network or unknown error fetching file content: ${error.message || 'Unknown error'}`);
+        throw new Error(`Network or unknown error fetching file content: ${error.message || "Unknown error"}`);
     }
 }
 
 export function parseGitHubUrl(url: string): { owner: string; name: string } | null {
     try {
         const parsed = new URL(url);
-        if (parsed.hostname !== "github.com") return null; //should be github.com
+        if (parsed.hostname !== "github.com") return null;
         const segments = parsed.pathname.split("/").filter(Boolean);
-        if (segments.length !== 2) return null; //only 2 segments in the array
+        if (segments.length !== 2) return null;
         const [owner, name] = segments;
         return { owner: owner.toLowerCase(), name: name.toLowerCase() };
-    } catch (error: any) {
+    } catch {
         return null;
     }
 }
 
-export async function collectAllFiles(owner: string, name: string, path: string = ""): Promise<string[]> {
-    const items = await getRepoContents(owner, name, path);
-    const files: string[] = [];
-    for (const item of items) {
-        if (shouldSkipPath(item.path)) continue;
-        if (item.type === "file" && hasAllowedExtension(item.path)) {
-        if (item.size && item.size <= MAX_FILE_SIZE) files.push(item.path);
-        } else if (item.type === "dir") {
-        const nested = await collectAllFiles(owner, name, item.path);
-        files.push(...nested);
-        }
-    }
-    return files;
-}
