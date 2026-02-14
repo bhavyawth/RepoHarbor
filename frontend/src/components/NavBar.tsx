@@ -1,108 +1,222 @@
-import { Code2, Pin, Trash2, LogOut, User } from 'lucide-react';
+import {
+  ChevronDown,
+  Code2,
+  FolderTree,
+  Info,
+  Loader2,
+  Pin,
+  XCircle,
+  Sparkles,
+  Trash2,
+} from 'lucide-react';
 import { useAuth } from '../features/auth/auth.hooks';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AnimatedThemeToggler } from './ui/animated-theme-toggler';
-import { api } from '../api/client';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
+import { Button } from './ui/button';
+import { useChatStore } from '../store/chat.store';
+import {
+  useDeleteRepo,
+  useGetRepos,
+  usePinRepo,
+  useSummarizeRepo,
+} from '../features/repo/repos.hooks';
+import { useClearChat } from '../features/chat/chat.hooks';
+import { useEffect, useState } from 'react';
 
 export default function Navbar() {
   const { data: user } = useAuth();
-  const { repoId } = useParams();
   const navigate = useNavigate();
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const { activeChatId: activeChat, setActiveChatId, setRepoInfoOpen, setRepoInfoTarget } = useChatStore();
+  const { data: repos } = useGetRepos();
+  const pinRepoMutation = usePinRepo();
+  const deleteRepoMutation = useDeleteRepo();
+  const [showSummaryPanel, setShowSummaryPanel] = useState(false);
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setDropdownOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleLogout = async () => {
-    try {
-      await api.post('/auth/logout');
-      navigate('/');
-      window.location.reload();
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
-  };
+  const activeRepo = repos?.find((repo) => repo._id === activeChat) ?? null;
+  const clearChatMutation = useClearChat(activeRepo?._id ?? '');
+  const {
+    mutateAsync: summarizeRepo,
+    data: repoSummary,
+    isPending: repoSummaryLoading,
+    isError: repoSummaryError,
+    error: repoSummaryErrorValue,
+    reset: resetSummary,
+  } = useSummarizeRepo();
 
   const handleGithubLogin = () => {
-    // todo: window.location.href = `${import.meta.env.VITE_API_URL}/auth/github`;
     window.location.href = `http://localhost:3000/api/auth/github`;
   };
 
+  const handleRepoInfo = () => {
+    if (!activeRepo) return;
+    setRepoInfoTarget(activeRepo);
+    setRepoInfoOpen(true);
+  };
+
+  const handlePinRepo = () => {
+    if (!activeRepo) return;
+    pinRepoMutation.mutate(activeRepo._id);
+  };
+
+  const handleDeleteRepo = () => {
+    if (!activeRepo) return;
+    deleteRepoMutation.mutate(activeRepo._id);
+    setActiveChatId(null);
+    navigate('/app');
+  };
+
+  const handleClearChat = () => {
+    if (!activeRepo) return;
+    clearChatMutation.mutate();
+  };
+
+  const handleRepoSummary = async () => {
+    if (!activeRepo || repoSummaryLoading) return;
+    setShowSummaryPanel(true);
+    await summarizeRepo(activeRepo._id);
+  };
+
+  useEffect(() => {
+    setShowSummaryPanel(false);
+    resetSummary();
+  }, [activeRepo?._id, resetSummary]);
+
   return (
-    <nav className="h-16 border-b border-gray-280 dark:border-gray-800 bg-[#f5f7fb] dark:bg-black flex items-center justify-between px-6">
-      <div className="flex items-center gap-3">
+    <nav className="relative h-16 border-b border-gray-280 dark:border-gray-800 bg-[#f5f7fb] dark:bg-black flex items-center justify-between px-6">
+      {!user && <div className="flex items-center gap-3">
         <Code2 className="w-6 h-6 text-purple-600 dark:text-purple-500" />
         <span className="text-xl font-semibold text-slate-900 dark:text-white">
           RepoHarbor
         </span>
-      </div>
+      </div>}
 
-      {user && repoId && (
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-            Active Repository
-          </span>
-          <button className="p-2 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
-            <Pin className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-          </button>
-          <button className="p-2 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
-            <Trash2 className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-          </button>
+      {user && (
+        <div className="absolute left-1/2 -translate-x-1/2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="flex items-center gap-2 text-sm font-medium"
+                disabled={!activeRepo}
+              >
+                <span className="truncate max-w-[260px] text-xl">
+                  {activeRepo? activeRepo.name : ''}
+                </span>
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" className="w-56">
+              <DropdownMenuItem
+                className="cursor-pointer gap-2"
+                onClick={() => navigate(`/app/${activeRepo?._id ?? ''}`)}
+                disabled={!activeRepo}
+              >
+                <FolderTree className="h-4 w-4" />
+                File Tree / Structure
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer gap-2"
+                onClick={handleRepoInfo}
+                disabled={!activeRepo}
+              >
+                <Info className="h-4 w-4" />
+                Repo Info
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer gap-2"
+                onClick={handlePinRepo}
+                disabled={!activeRepo}
+              >
+                <Pin className="h-4 w-4" />
+                {activeRepo?.isPinned ? 'Unpin Repo' : 'Pin Repo'}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer gap-2"
+                onClick={handleRepoSummary}
+                disabled={!activeRepo || repoSummaryLoading}
+              >
+                {repoSummaryLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
+                {repoSummaryLoading ? 'Summarizing...' : 'Summarize Repo'}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer gap-2"
+                onClick={handleClearChat}
+                disabled={!activeRepo}
+              >
+                <XCircle className="h-4 w-4" />
+                Clear Chat
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer gap-2 text-red-600 dark:text-red-400"
+                onClick={handleDeleteRepo}
+                disabled={!activeRepo}
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete Chat
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {showSummaryPanel && activeRepo && (
+            <div className="repo-summary-panel mt-2 w-[min(520px,90vw)] rounded-lg border border-border bg-popover p-4 text-sm shadow-xl">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 font-medium">
+                  <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                  Repository Summary
+                </div>
+                <Button
+                  variant="ghost"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => setShowSummaryPanel(false)}
+                >
+                  Close
+                </Button>
+              </div>
+              {repoSummaryLoading && (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Generating summary...
+                </div>
+              )}
+              {!repoSummaryLoading && repoSummaryError && (
+                <div className="rounded-md border border-red-200 bg-red-50 p-3 text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+                  {repoSummaryErrorValue instanceof Error
+                    ? repoSummaryErrorValue.message
+                    : 'Failed to summarize repository.'}
+                </div>
+              )}
+              {!repoSummaryLoading && !repoSummaryError && repoSummary?.summary && (
+                <p className="max-h-64 overflow-y-auto whitespace-pre-wrap leading-relaxed">
+                  {repoSummary.summary}
+                </p>
+              )}
+            </div>
+          )}
         </div>
       )}
 
       <div className="flex items-center gap-3">
         {!user ? (
-          <div className="flex items-center gap-3">
-            <button
+          <>
+            <Button
               onClick={handleGithubLogin}
-              className="px-4 py-2 bg-linear-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded-lg font-semibold transition-all text-sm"
+              className="bg-linear-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white"
             >
-              Get Started
-            </button>
+              Sign up with GitHub
+            </Button>
             <AnimatedThemeToggler />
-          </div>
+          </>
         ) : (
-          <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="w-10 h-10 rounded-full bg-linear-to-r from-purple-600 to-blue-600 flex items-center justify-center text-white font-semibold hover:opacity-90 transition-opacity"
-            >
-              {user.username?.[0]?.toUpperCase() || <User className="w-5 h-5" />}
-            </button>
-            {dropdownOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg shadow-lg py-2">
-                <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-800">
-                  <p className="text-sm font-medium text-slate-900 dark:text-white">
-                    {user.username}
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {user.email}
-                  </p>
-                </div>
-                <div className="px-4 py-3 flex items-center justify-between">
-                  <span className="text-sm text-slate-700 dark:text-slate-300">Theme</span>
-                  <AnimatedThemeToggler />
-                </div>
-                <button
-                  onClick={handleLogout}
-                  className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-800 flex items-center gap-2"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Logout
-                </button>
-              </div>
-            )}
-          </div>
+          <div />
         )}
       </div>
     </nav>

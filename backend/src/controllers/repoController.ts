@@ -67,7 +67,6 @@ export const listRepos = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Failed to fetch repositories" });
   }
 };
-
 // ============================================================
 // DELETE /repos/:repoId — Delete a repo and all its chunks
 // ============================================================
@@ -87,12 +86,9 @@ export const deleteRepo = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Failed to delete repository" });
   }
 };
-
 // ============================================================
 // POST /repos/:repoId/ingest — Ingest a repository
 // ============================================================
-
-
 export const ingestRepo = async (req: Request, res: Response) => {
   const { repoId } = req.params;
   const repo = await Repo.findById(repoId);
@@ -141,7 +137,6 @@ export const ingestRepo = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Ingestion failed", error: error.message });
   }
 };
-
 // ============================================================
 // POST /repos/:repoId/chat — Chat with a repository
 // ============================================================
@@ -201,7 +196,6 @@ export const chatWithRepo = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Failed to generate answer", error: error.message });
   }
 }
-
 // ============================================================
 // GET /repos/:repoId/structure — Get the repository structure as a tree
 // =====================================================
@@ -217,6 +211,23 @@ export const getRepoStructure = async (req: Request, res: Response) => {
     return res.status(200).json({ structure });
   } catch (error: any) {
     return res.status(500).json({ message: "Failed to generate repo structure", error: error.message });
+  }
+};
+// ============================================================
+// PATCH /repos/:repoId/pin — Pin or unpin a repository
+// ============================================================
+export const pinRepo = async (req: Request, res: Response) => {
+  const { repoId } = req.params;
+  if (!repoId) return res.status(400).json({ message: "Repo ID is required" });
+  const repo = await Repo.findById(repoId);
+  if (!repo) return res.status(404).json({ message: "Repo not found" });
+  if (repo.userId.toString() !== req.user!._id.toString()) return res.status(403).json({ message: "Not authorized" });
+  try {
+    repo.isPinned = !repo.isPinned;
+    await repo.save();
+    return res.status(200).json({ message: repo.isPinned ? "Repo pinned" : "Repo unpinned", isPinned: repo.isPinned });
+  } catch (error: any) {
+    return res.status(500).json({ message: "Failed to update pin status", error: error.message });
   }
 };
 

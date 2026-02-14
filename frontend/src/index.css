@@ -136,3 +136,20 @@
     mix-blend-mode: normal;
 }
 
+@layer components {
+  .repo-summary-panel {
+    animation: summary-panel-in 180ms ease-out;
+    transform-origin: top center;
+  }
+}
+
+@keyframes summary-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

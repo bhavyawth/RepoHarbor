@@ -43,12 +43,8 @@ import { useEffect, useState } from 'react';
 import { AnimatedThemeToggler } from './ui/animated-theme-toggler';
 import { RepoInfoSheet } from './RepoInfoSheet';
 import { useAuth, useLogout } from '../features/auth/auth.hooks';
-import {
-  useDeleteRepo,
-  useGetRepos,
-  usePinRepo,
-  useRepoSummary,
-} from '../features/repo/repos.hooks';
+import { useChatStore } from '../store/chat.store';
+import {useDeleteRepo, useGetRepos, usePinRepo, useRepoSummary} from '../features/repo/repos.hooks';
 import type { Repo } from '../features/repo/repos.api';
 import { useRepoDetails } from '../features/github/github.hooks';
 
@@ -61,11 +57,11 @@ export default function AppSidebar() {
   const pinRepoMutation = usePinRepo();
   const deleteRepoMutation = useDeleteRepo();
 
-  const [activeChatId, setActiveChatId] = useState<string>('1');
+  const { activeChatId, setActiveChatId } = useChatStore();
   const [pinnedOpen, setPinnedOpen] = useState(true);
   const [allChatsOpen, setAllChatsOpen] = useState(true);
-  const [repoInfoTarget, setRepoInfoTarget] = useState<Repo | null>(null);
-  const [repoInfoOpen, setRepoInfoOpen] = useState(false);
+  const { repoInfoTarget, setRepoInfoTarget } = useChatStore();
+  const { repoInfoOpen, setRepoInfoOpen } = useChatStore();
   const {
     data: repoInfo,
     isLoading: repoInfoLoading,
@@ -213,7 +209,9 @@ export default function AppSidebar() {
                         {pinnedChats.map((chat) => (
                           <SidebarMenuItem key={chat._id}>
                             <SidebarMenuButton
-                              onClick={() => setActiveChatId(chat._id)}
+                              onClick={() => {
+                                setActiveChatId(chat._id);
+                              }}
                               isActive={activeChatId === chat._id}
                               className="h-auto items-start"
                             >
@@ -284,7 +282,9 @@ export default function AppSidebar() {
                       {unpinnedChats.map((chat) => (
                         <SidebarMenuItem key={chat._id}>
                           <SidebarMenuButton
-                            onClick={() => setActiveChatId(chat._id)}
+                            onClick={() => {
+                              setActiveChatId(chat._id);
+                            }}
                             isActive={activeChatId === chat._id}
                             className="h-auto items-start"
                           >

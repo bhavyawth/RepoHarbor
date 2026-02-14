@@ -70,6 +70,17 @@ export function useRepoSummary(repoId?: string) {
   });
 }
 
+export function useSummarizeRepo() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: reposApi.summarizeRepo,
+    onSuccess: (data, repoId) => {
+      queryClient.setQueryData(reposKeys.summary(repoId), data);
+    },
+  });
+}
+
 export function usePinRepo() {
   const queryClient = useQueryClient();
   return useMutation({

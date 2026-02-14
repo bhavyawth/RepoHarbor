@@ -19,6 +19,10 @@ const RepoSchema = new Schema(
       ref: 'User',
       required: true,
     },
+    isPinned: {
+      type: Boolean,
+      default: false,
+    },
     indexStatus: {
       type: String,
       enum: ['pending', 'indexing', 'indexed', 'failed'],

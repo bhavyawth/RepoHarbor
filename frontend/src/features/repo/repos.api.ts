@@ -46,9 +46,13 @@ export const reposApi = {
     await api.post(`/repos/${repoId}/ingest`);
   },
 
-  getRepoSummary: async (repoId: string): Promise<RepoSummary> => {
+  summarizeRepo: async (repoId: string): Promise<RepoSummary> => {
     const { data } = await api.get(`/repos/${repoId}/summary`);
     return data;
+  },
+
+  getRepoSummary: async (repoId: string): Promise<RepoSummary> => {
+    return reposApi.summarizeRepo(repoId);
   },
 
   getRepoStructure: async (repoId: string): Promise<RepoStructure> => {
