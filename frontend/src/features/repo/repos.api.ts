@@ -37,7 +37,14 @@ export interface RepoStructure {
 export const reposApi = {
   registerRepo: async (data: RegisterRepoRequest): Promise<Repo> => {
     const { data: repo } = await api.post('/repos', data);
-    return repo;
+    const normalizedId = repo._id ?? repo.id;
+    return {
+      ...repo,
+      _id: normalizedId,
+      isPinned: repo.isPinned ?? false,
+      userId: repo.userId ?? '',
+      updatedAt: repo.updatedAt ?? repo.createdAt,
+    };
   },
 
   getRepos: async (): Promise<Repo[]> => {

@@ -77,7 +77,7 @@ export default function Navbar() {
     if (!activeRepo) return;
     deleteRepoMutation.mutate(activeRepo._id);
     setActiveChatId(null);
-    navigate('/app');
+    navigate('/chat/new');
   };
 
   const handleClearChat = () => {

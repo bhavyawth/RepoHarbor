@@ -4,9 +4,11 @@ import AppLayout from './layouts/AppLayout.tsx'
 import ProtectedRoute from './components/ProtectedComponent.tsx'
 import { useAuth } from './features/auth/auth.hooks.ts'
 import { useEffect } from 'react'
+import NewChat from './components/NewChat.tsx'
+import ChatPage from './pages/ChatPage.tsx'
 
 function App() {
-  const { data: user, isLoading } = useAuth();
+  const { data: user } = useAuth();
 
   useEffect(() => {
     const theme = localStorage.getItem('theme');
@@ -41,16 +43,25 @@ function App() {
             path="/app"
             element={
               <ProtectedRoute>
-                <div>Home Page</div>
+                <Navigate to="/chat/new" replace />
               </ProtectedRoute>
             }
           />
 
           <Route
-            path="/app/:repoId"
+            path="/chat/new"
             element={
               <ProtectedRoute>
-                <div>Home Page</div>
+                <NewChat />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/chat/:chatId"
+            element={
+              <ProtectedRoute>
+                <ChatPage />
               </ProtectedRoute>
             }
           />

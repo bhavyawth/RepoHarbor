@@ -163,6 +163,7 @@ export const chatWithRepo = async (req: Request, res: Response) => {
     if (!repo) return res.status(404).json({ message: "Repo not found" });
     if (repo.userId.toString() !== req.user!._id.toString()) return res.status(403).json({ message: "Not authorized" });
     if (repo.indexStatus !== "indexed") return res.status(400).json({ message: "Repo is not indexed yet" });
+    Repo.findByIdAndUpdate(repoId, {}); //to update recent access
     const questionEmbedding = await generateEmbedding(question);
     const chunks = (await Chunk.find({ repoId })).map(c => ({
       repo: repo.owner + "/" + repo.name,

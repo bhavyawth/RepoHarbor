@@ -3,6 +3,7 @@ import { Github, ArrowRight } from 'lucide-react';
 import { BorderBeam } from '../components/ui/border-beam';
 import { TypingAnimation } from '../components/ui/typing-animation';
 import { FlickeringGrid } from '../components/ui/flickering-grid';
+import FloatingBlob from '../components/FloatingBlob';
 
 export default function Hero() {
   const handleGithubLogin = () => {
@@ -12,47 +13,7 @@ export default function Hero() {
   return (
     <div className="relative min-h-screen bg-[#f5f7fb] dark:bg-black text-slate-900 dark:text-white transition-colors duration-500 overflow-hidden">
       {/* Animated background blobs */}
-      <div className="absolute inset-0 overflow-hidden">
-        <motion.div
-          className="absolute top-20 right-20 w-96 h-96 bg-purple-400/50 dark:bg-purple-600/24 rounded-full blur-3xl"
-          animate={{
-            x: [0, 80, -40, 0],
-            y: [0, -60, 40, 0],
-            scale: [1, 1.12, 0.95, 1],
-          }}
-          transition={{
-            duration: 11,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-        <motion.div
-          className="absolute bottom-40 left-20 w-80 h-80 bg-blue-400/50 dark:bg-blue-600/30 rounded-full blur-3xl"
-          animate={{
-            x: [0, -70, 50, 0],
-            y: [0, 60, -40, 0],
-            scale: [1, 1.18, 0.92, 1],
-          }}
-          transition={{
-            duration: 10,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-        <motion.div
-          className="absolute top-1/2 right-1/3 w-72 h-72 bg-indigo-400/50 dark:bg-indigo-600/24 rounded-full blur-3xl"
-          animate={{
-            x: [0, 60, -30, 0],
-            y: [0, -50, 30, 0],
-            scale: [1, 1.15, 0.94, 1],
-          }}
-          transition={{
-            duration: 18,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-      </div>
+      <FloatingBlob />
 
       {/* Hero Content */}
       <div className="relative z-10 max-w-11/12 mx-auto px-6 lg:px-8">

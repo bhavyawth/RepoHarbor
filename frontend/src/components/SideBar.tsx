@@ -40,6 +40,7 @@ import {
   Info,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AnimatedThemeToggler } from './ui/animated-theme-toggler';
 import { RepoInfoSheet } from './RepoInfoSheet';
 import { useAuth, useLogout } from '../features/auth/auth.hooks';
@@ -52,12 +53,13 @@ export default function AppSidebar() {
   const { state } = useSidebar();
   let isCollapsed = state === 'collapsed';
   const { data: repos } = useGetRepos();
+  const navigate = useNavigate();
   const { data: user } = useAuth();
   const { mutate: logout } = useLogout()
   const pinRepoMutation = usePinRepo();
   const deleteRepoMutation = useDeleteRepo();
 
-  const { activeChatId, setActiveChatId } = useChatStore();
+  const { chats, setChats, activeChatId, setActiveChatId, removeChat } = useChatStore();
   const [pinnedOpen, setPinnedOpen] = useState(true);
   const [allChatsOpen, setAllChatsOpen] = useState(true);
   const { repoInfoTarget, setRepoInfoTarget } = useChatStore();
@@ -77,9 +79,12 @@ export default function AppSidebar() {
     isError: repoSummaryError,
   } = useRepoSummary(repoInfoTarget?._id ?? '');
 
-
-  const pinnedChats: Repo[] = repos ? repos.filter((repo) => repo.isPinned) : [];
-  const unpinnedChats: Repo[] = repos ? repos.filter((repo) => !repo.isPinned) : [];
+  const pinnedChats: Repo[] = chats.filter((repo) => repo.isPinned).sort(
+    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+  );
+  const unpinnedChats: Repo[] = chats.filter((repo) => !repo.isPinned).sort(
+    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+  );;
 
   const handleLogout = () => {
     logout();
@@ -90,6 +95,11 @@ export default function AppSidebar() {
   };
   const handleDeleteRepo = (repoId: string) => {
     deleteRepoMutation.mutate(repoId);
+    removeChat(repoId);
+    if (activeChatId === repoId) {
+      setActiveChatId(null);
+      navigate('/chat/new');
+    }
   }
   const handleRepoInfo = (repo: Repo) => {
     setRepoInfoTarget(repo);
@@ -111,6 +121,12 @@ export default function AppSidebar() {
       setRepoInfoTarget(null);
     }
   }, [repoInfoOpen]);
+
+  useEffect(() => {
+    if (repos) {
+      setChats(repos);
+    }
+  }, [repos, setChats]);
 
 
   return (
@@ -171,6 +187,10 @@ export default function AppSidebar() {
             <SidebarMenuButton
               tooltip="New Chat"
               size="lg"
+              onClick={() => {
+                setActiveChatId(null);
+                navigate('/chat/new');
+              }}
               className="h-10 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:text-white hover:shadow-[0_0_0_1px_hsl(var(--sidebar-ring))] dark:from-sidebar-primary/90 dark:to-sidebar-primary dark:hover:from-sidebar-primary dark:hover:to-sidebar-primary/80 dark:text-sidebar-primary-foreground
                 group-data-[collapsible=icon]:justify-center
                 group-data-[collapsible=icon]:px-0
@@ -211,6 +231,7 @@ export default function AppSidebar() {
                             <SidebarMenuButton
                               onClick={() => {
                                 setActiveChatId(chat._id);
+                                navigate(`/chat/${chat._id}`);
                               }}
                               isActive={activeChatId === chat._id}
                               className="h-auto items-start"
@@ -284,6 +305,7 @@ export default function AppSidebar() {
                           <SidebarMenuButton
                             onClick={() => {
                               setActiveChatId(chat._id);
+                              navigate(`/chat/${chat._id}`);
                             }}
                             isActive={activeChatId === chat._id}
                             className="h-auto items-start"
