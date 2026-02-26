@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 // import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, Plus } from 'lucide-react';
@@ -47,6 +47,25 @@ export default function NewChat() {
       setError(err instanceof Error ? err.message : 'Failed to create chat.');
     }
   };
+
+  useEffect(() => {
+    const pendingUrl = localStorage.getItem("pendingRepoUrl");
+    if (!pendingUrl) return;
+    localStorage.removeItem("pendingRepoUrl");
+    const createPendingChat = async () => {
+      try {
+        const chat = await registerRepoMutation.mutateAsync({
+          repoUrl: pendingUrl,
+        });
+        addChat(chat);
+        setActiveChatId(chat._id);
+        navigate(`/chat/${chat._id}`);
+      } catch {
+        console.error("Failed to create chat after login.");
+      }
+    };
+    createPendingChat();
+  }, []);
 
   return (
     <div className="relative mx-auto flex h-full w-full items-center justify-center px-6">

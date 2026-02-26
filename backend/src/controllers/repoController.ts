@@ -105,8 +105,8 @@ export const ingestRepo = async (req: Request, res: Response) => {
       .filter((entry) => hasAllowedExtension(entry.path))
       .filter((entry) => entry.size === undefined || entry.size <= MAX_FILE_SIZE)
       .map((entry) => entry.path);
-    const repoTree = buildJsonTree(filePaths);
-    await Repo.findByIdAndUpdate(repoId, { repoTree });
+    // const repoTree = buildJsonTree(filePaths);
+    // await Repo.findByIdAndUpdate(repoId, { repoTree });
     const allChunks = [];
     for (const filePath of filePaths) {
       const content = await getFileContent(repo.owner, repo.name, filePath, repo.defaultBranch ?? undefined);
@@ -246,6 +246,28 @@ export const pinRepo = async (req: Request, res: Response) => {
     return res.status(200).json({ message: repo.isPinned ? "Repo pinned" : "Repo unpinned", isPinned: repo.isPinned });
   } catch (error: any) {
     return res.status(500).json({ message: "Failed to update pin status", error: error.message });
+  }
+};
+
+// ============================================================
+// GET /repos/:repoId/index-status â€” Get indexing status
+// ============================================================
+export const getRepoIndexStatus = async (req: Request, res: Response) => {
+  const { repoId } = req.params;
+  if (!repoId) return res.status(400).json({ message: "Repo ID is required" });
+
+  try {
+    const repo = await Repo.findById(repoId);
+    if (!repo) return res.status(404).json({ message: "Repo not found" });
+    if (repo.userId.toString() !== req.user!._id.toString()) return res.status(403).json({ message: "Not authorized" });
+
+    return res.status(200).json({
+      indexStatus: repo.indexStatus,
+      lastIndexedAt: repo.lastIndexedAt,
+      indexError: repo.indexError ?? null,
+    });
+  } catch (error: any) {
+    return res.status(500).json({ message: "Failed to fetch index status", error: error.message });
   }
 };
 

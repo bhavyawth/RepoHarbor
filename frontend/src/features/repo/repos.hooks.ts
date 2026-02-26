@@ -12,6 +12,7 @@ export const reposKeys = {
   detail: (id: string) => [...reposKeys.all, 'detail', id] as const,
   summary: (id: string) => [...reposKeys.all, 'summary', id] as const,
   structure: (id: string) => [...reposKeys.all, 'structure', id] as const,
+  indexStatus: (id: string) => [...reposKeys.all, 'index-status', id] as const,
 };
 
 export function useGetRepos() {
@@ -105,6 +106,18 @@ export function usePinRepo() {
     mutationFn: reposApi.pinRepo,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: reposKeys.list() });
+    },
+  });
+}
+
+export function useRepoIndexStatus(repoId?: string, shouldPoll = true) {
+  return useQuery({
+    queryKey: repoId ? reposKeys.indexStatus(repoId) : reposKeys.indexStatus(''),
+    queryFn: () => reposApi.getRepoIndexStatus(repoId as string),
+    enabled: !!repoId,
+    refetchInterval: (query) => {
+      if (!shouldPoll) return false;
+      return query.state.data?.indexStatus === 'indexing' ? 2000 : false;
     },
   });
 }

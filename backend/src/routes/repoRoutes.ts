@@ -8,6 +8,7 @@ import {
   chatWithRepo,
   getRepoStructure,
   pinRepo,
+  getRepoIndexStatus,
 } from "../controllers/repoController";
 import {
   getChatHistory,
@@ -26,6 +27,7 @@ router.post("/:repoId/ingest", ingestRepo);
 router.post("/:repoId/messages", chatWithRepo); 
 router.get("/:repoId/structure", getRepoStructure);
 router.patch("/:repoId/pin", pinRepo);
+router.get("/:repoId/index-status", getRepoIndexStatus);
 //chat controller    
 router.get("/:repoId/messages", getChatHistory);      
 router.delete("/:repoId/messages", clearChatHistory); 

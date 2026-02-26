@@ -1,6 +1,7 @@
 import { api } from '../../api/client';
 
 export interface Repo {
+  indexed?: boolean;
   isPinned: boolean;
   _id: string;
   owner: string;
@@ -34,6 +35,12 @@ export interface RepoStructure {
   structure: string;
 }
 
+export interface RepoIndexStatus {
+  indexStatus: Repo['indexStatus'];
+  indexError?: string | null;
+  lastIndexedAt?: string | null;
+}
+
 export const reposApi = {
   registerRepo: async (data: RegisterRepoRequest): Promise<Repo> => {
     const { data: repo } = await api.post('/repos', data);
@@ -58,6 +65,11 @@ export const reposApi = {
 
   ingestRepo: async (repoId: string): Promise<void> => {
     await api.post(`/repos/${repoId}/ingest`);
+  },
+
+  getRepoIndexStatus: async (repoId: string): Promise<RepoIndexStatus> => {
+    const { data } = await api.get(`/repos/${repoId}/index-status`);
+    return data;
   },
 
   summarizeRepo: async (repoId: string): Promise<RepoSummary> => {
