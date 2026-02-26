@@ -94,7 +94,7 @@ const blobs: BlobConfig[] = [
 
 export default function FloatingBlob() {
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[210vh] overflow-hidden">
+    <div className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[260vh] overflow-hidden">
       {blobs.map((blob, index) => (
         <motion.div
           key={index}

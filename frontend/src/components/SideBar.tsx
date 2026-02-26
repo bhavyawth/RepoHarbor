@@ -27,7 +27,6 @@ import {
   CollapsibleTrigger,
 } from './ui/collapsible';
 import {
-  Code2,
   Search,
   Plus,
   MessageSquare,
@@ -39,6 +38,7 @@ import {
   Trash2,
   Info,
 } from 'lucide-react';
+import Logo from './Logo';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatedThemeToggler } from './ui/animated-theme-toggler';
@@ -144,7 +144,7 @@ export default function AppSidebar() {
                 <div className="group/logo flex flex-1 items-center gap-2">
                   <div className="relative flex aspect-square size-11 items-center justify-center">
                     <div className="flex size-11 items-center justify-center rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white group-data-[collapsible=icon]:group-hover/logo:hidden dark:bg-sidebar-primary dark:text-sidebar-primary-foreground dark:bg-none">
-                      <Code2 className="size-4" />
+                      <Logo className="size-10" />
                     </div>
                     <div className="absolute inset-0 hidden items-center justify-center group-data-[collapsible=icon]:group-hover/logo:flex">
                       <SidebarTrigger className="size-11" />

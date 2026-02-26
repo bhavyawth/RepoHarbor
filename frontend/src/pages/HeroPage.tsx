@@ -206,7 +206,8 @@ export default function Hero() {
       </div>
 
       {/* Features Section */}
-      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 py-24 border-t border-slate-200 dark:border-slate-800">
+      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 py-24 border-t border-slate-200 dark:border-slate-800 scroll-mt-24"
+      id='features'>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}

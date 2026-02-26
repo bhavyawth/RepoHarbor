@@ -1,0 +1,28 @@
+export default function Logo({ className }: { className?: string }) {
+  return (
+    <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+      <path 
+        d="M50 20V55M50 80C35 80 25 70 20 55L28 55C32 65 40 70 50 70C60 70 68 65 72 55L80 55C75 70 65 80 50 80Z" 
+        stroke="#475569" 
+        stroke-width="6" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"
+      />
+      <path 
+        d="M38 40L30 48L38 56" 
+        stroke="#3B82F6" 
+        stroke-width="6" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"
+      />
+      <path 
+        d="M62 40L70 48L62 56" 
+        stroke="#3B82F6" 
+        stroke-width="6" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"
+      />
+      <circle cx="50" cy="20" r="6" stroke="#475569" stroke-width="5"/>
+    </svg>
+  )
+}

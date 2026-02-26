@@ -110,6 +110,18 @@ export function usePinRepo() {
   });
 }
 
+export function useIndexChat() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: reposApi.indexChat,
+    onSuccess: (_, chatId) => {
+      queryClient.invalidateQueries({ queryKey: reposKeys.list() });
+      queryClient.invalidateQueries({ queryKey: reposKeys.detail(chatId) });
+      queryClient.invalidateQueries({ queryKey: reposKeys.indexStatus(chatId) });
+    },
+  });
+}
+
 export function useRepoIndexStatus(repoId?: string, shouldPoll = true) {
   return useQuery({
     queryKey: repoId ? reposKeys.indexStatus(repoId) : reposKeys.indexStatus(''),
@@ -117,7 +129,8 @@ export function useRepoIndexStatus(repoId?: string, shouldPoll = true) {
     enabled: !!repoId,
     refetchInterval: (query) => {
       if (!shouldPoll) return false;
-      return query.state.data?.indexStatus === 'indexing' ? 2000 : false;
+      const status = query.state.data?.indexStatus;
+      return status === 'indexing' || status === 'running' ? 2000 : false;
     },
   });
 }

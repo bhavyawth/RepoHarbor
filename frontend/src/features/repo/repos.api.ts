@@ -1,3 +1,4 @@
+import { AxiosError } from 'axios';
 import { api } from '../../api/client';
 
 export interface Repo {
@@ -7,7 +8,7 @@ export interface Repo {
   owner: string;
   name: string;
   userId: string;
-  indexStatus: 'pending' | 'indexing' | 'indexed' | 'failed';
+  indexStatus: 'idle' | 'running' | 'done' | 'pending' | 'indexing' | 'indexed' | 'failed';
   indexError?: string | null;
   defaultBranch?: string | null;
   lastIndexedAt?: string | null;
@@ -41,6 +42,16 @@ export interface RepoIndexStatus {
   lastIndexedAt?: string | null;
 }
 
+export type NormalizedIndexStatus = 'idle' | 'running' | 'done' | 'failed';
+
+export function normalizeIndexStatus(status?: Repo['indexStatus'] | string | null): NormalizedIndexStatus {
+  if (!status) return 'idle';
+  if (status === 'failed') return 'failed';
+  if (status === 'running' || status === 'indexing') return 'running';
+  if (status === 'done' || status === 'indexed') return 'done';
+  return 'idle';
+}
+
 export const reposApi = {
   registerRepo: async (data: RegisterRepoRequest): Promise<Repo> => {
     const { data: repo } = await api.post('/repos', data);
@@ -67,9 +78,22 @@ export const reposApi = {
     await api.post(`/repos/${repoId}/ingest`);
   },
 
-  getRepoIndexStatus: async (repoId: string): Promise<RepoIndexStatus> => {
-    const { data } = await api.get(`/repos/${repoId}/index-status`);
+  indexChat: async (chatId: string): Promise<RepoIndexStatus> => {
+    const { data } = await api.post(`/chats/${chatId}/index`);
     return data;
+  },
+
+  getRepoIndexStatus: async (repoId: string): Promise<RepoIndexStatus> => {
+    try {
+      const { data } = await api.get(`/chats/${repoId}/index-status`);
+      return data;
+    } catch (error) {
+      if ((error as AxiosError).response?.status !== 404) {
+        throw error;
+      }
+      const { data } = await api.get(`/repos/${repoId}/index-status`);
+      return data;
+    }
   },
 
   summarizeRepo: async (repoId: string): Promise<RepoSummary> => {

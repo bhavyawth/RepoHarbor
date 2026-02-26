@@ -151,8 +151,12 @@ export const chatWithRepo = async (req: Request, res: Response) => {
   const messages = await ChatMsg.find({ repoId })
     .sort({ createdAt: -1 })
     .limit(6)
-    .lean()
-  const chatHistory = messages.reverse()
+    .lean();
+  const formattedMessages = messages.map((msg) => ({
+    role: msg.role,
+    content: msg.content,
+  }));
+  const chatHistory = formattedMessages.reverse()
   const safeHistory = Array.isArray(chatHistory)
     ? chatHistory.slice(-6)
     : [];

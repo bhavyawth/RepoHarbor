@@ -1,6 +1,5 @@
 import {
   ChevronDown,
-  Code2,
   FolderTree,
   Info,
   Loader2,
@@ -8,7 +7,9 @@ import {
   XCircle,
   Sparkles,
   Trash2,
+  RotateCcw,
 } from 'lucide-react';
+import Logo from './Logo';
 import { useAuth } from '../features/auth/auth.hooks';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AnimatedThemeToggler } from './ui/animated-theme-toggler';
@@ -45,6 +46,7 @@ export default function Navbar() {
   const [showStructurePanel, setShowStructurePanel] = useState(false);
 
   const activeRepo = repos?.find((repo) => repo._id === activeChat) ?? null;
+  const isChatReady = activeRepo?.indexStatus === 'done';
   const clearChatMutation = useClearChat(activeRepo?._id ?? '');
   const {
     mutateAsync: summarizeRepo,
@@ -122,6 +124,9 @@ export default function Navbar() {
     }
   };
 
+  const isIndexing = ingestRepoMutation.isPending;
+  const effectiveStatus = activeRepo?.indexStatus ?? 'pending';
+
   useEffect(() => {
     setShowSummaryPanel(false);
     setShowStructurePanel(false);
@@ -133,7 +138,7 @@ export default function Navbar() {
       <nav className="pointer-events-none fixed inset-x-0 top-5 z-40 px-4 sm:px-8 lg:px-12">
         <div className="pointer-events-auto mx-auto flex w-full max-w-5xl items-center justify-between rounded-full border border-slate-300/80 bg-white/75 px-6 py-2.5 shadow-sm backdrop-blur-md dark:border-slate-700/80 dark:bg-slate-900/70">
           <div className="flex items-center gap-2">
-            <Code2 className="h-5 w-5 text-slate-700 dark:text-slate-300" />
+            <Logo className="h-10 w-10" />
             <span className="text-base font-semibold tracking-tight text-slate-900 dark:text-slate-100">
               RepoHarbor
             </span>
@@ -170,9 +175,17 @@ export default function Navbar() {
               className="flex items-center gap-2 text-sm font-medium"
               disabled={!activeRepo}
             >
-              <span className="truncate max-w-[260px] text-xl">
-                {activeRepo ? activeRepo.name : ''}
-              </span>
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                <div>
+                  <p className="text-sm font-medium text-slate-900 dark:text-white">
+                    {activeRepo?.name || 'Repository Chat'}
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {isChatReady ? 'Ready to chat' : 'Indexing required'}
+                  </p>
+                </div>
+              </div>
               <ChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -280,20 +293,45 @@ export default function Navbar() {
 
       <div className="flex items-center gap-3">
         <Button
-          variant="outline"
           onClick={handleIngestRepo}
-          disabled={!activeRepo || ingestRepoMutation.isPending || activeRepo.indexStatus === 'indexing'}
+          disabled={isIndexing}
+          variant={effectiveStatus === 'done' ? 'outline' : 'default'}
+          size="sm"
         >
-          {(ingestRepoMutation.isPending || activeRepo?.indexStatus === 'indexing') && (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          {isIndexing ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Indexing...
+            </>
+          ) : effectiveStatus === 'done' ? (
+            <>
+              <RotateCcw className="mr-2 h-4 w-4" />
+              Reindex
+            </>
+          ) : effectiveStatus === 'failed' ? (
+            'Retry'
+          ) : (
+            'Index Repository'
           )}
-          {activeRepo?.indexStatus === 'indexing'
-            ? 'Indexing...'
-            : activeRepo?.lastIndexedAt
-              ? 'Reindex Repository'
-              : 'Index Repository'}
         </Button>
       </div>
     </nav>
   );
 }
+
+{/* <div className="shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-black/95 backdrop-blur-sm px-6 py-3">
+        <div className="mx-auto flex w-full max-w-4xl items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            <div>
+              <p className="text-sm font-medium text-slate-900 dark:text-white">
+                {activeChat?.name || 'Repository Chat'}
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {isChatReady ? 'Ready to chat' : 'Indexing required'}
+              </p>
+            </div>
+          </div>
+          
+        </div>
+      </div> */}
