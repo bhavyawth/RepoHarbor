@@ -8,6 +8,8 @@ import { useNavigate } from 'react-router-dom';
 import { useChatStore } from '../store/chat.store';
 import { useRegisterRepo } from '../features/repo/repos.hooks';
 import { useState, type FormEvent } from 'react';
+import { normalizeRepoInput } from '../lib/repo-input';
+
 const features = [
   {
     icon: Brain,
@@ -40,9 +42,9 @@ export default function Hero() {
 
   const handleCreateChat = async (e: FormEvent) => {
     e.preventDefault();
-    const url = repoUrl.trim();
-    if (!url) {
-      setError("Repository URL is required.");
+    const { repoUrl: normalizedRepoUrl, error: validationError } = normalizeRepoInput(repoUrl);
+    if (validationError || !normalizedRepoUrl) {
+      setError(validationError ?? 'Enter a valid GitHub URL or owner/repo.');
       return;
     }
     setError("");
@@ -50,17 +52,22 @@ export default function Hero() {
       await axios.get("http://localhost:3000/api/auth/me", {
         withCredentials: true,
       });
-      const chat = await registerRepoMutation.mutateAsync({ repoUrl: url });
+      const chat = await registerRepoMutation.mutateAsync({ repoUrl: normalizedRepoUrl });
       addChat(chat);
       setActiveChatId(chat._id);
       navigate(`/chat/${chat._id}`);
-    } catch (err: any) {
-      if (err.response?.status === 401) {
-        localStorage.setItem("pendingRepoUrl", url);
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status === 401) {
+        localStorage.setItem("pendingRepoUrl", normalizedRepoUrl);
         window.location.href = "http://localhost:3000/api/auth/github";
         return;
       }
-      setError("Failed to create chat.");
+      setError(
+        err instanceof Error && err.message
+          ? err.message
+          : "Failed to create chat. Please check the repository and try again."
+      );
     }
   };
 
@@ -121,24 +128,34 @@ export default function Hero() {
                     <input
                       type="text"
                       value={repoUrl}
-                      onChange={(e) => setRepoUrl(e.target.value)}
+                      onChange={(e) => {
+                        setRepoUrl(e.target.value);
+                        if (error) setError('');
+                      }}
                       placeholder="https://github.com/owner/repository"
                       className="flex-1 bg-transparent border-none outline-none text-slate-900 dark:text-white placeholder:text-slate-400 text-base"
                     />
                   </div>
-                  {error && (
-                    <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
-                      {error}
-                    </div>
-                  )}
                   <button
                     type="submit"
+                    disabled={registerRepoMutation.isPending}
                     className="group/btn px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded-lg font-semibold transition-all flex items-center gap-2 shrink-0"
                   >
-                    Start Chatting
-                    <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                    {registerRepoMutation.isPending ? (
+                      'Creating...'
+                    ) : (
+                      <>
+                        Start Chatting
+                        <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                      </>
+                    )}
                   </button>
                 </div>
+                {error && (
+                  <div className="mt-3 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+                    {error}
+                  </div>
+                )}
               </div>
             </form>
 

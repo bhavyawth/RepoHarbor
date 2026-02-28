@@ -33,32 +33,29 @@ export function useSendMessage(repoId: string) {
         createdAt: now,
         updatedAt: now,
       };
+
+      queryClient.setQueryData<ChatMessage[]>(chatKeys.history(repoId), [
+        ...previousMessages,
+        optimisticUserMessage,
+      ]);
+
+      return { previousMessages };
+    },
+    onSuccess: (result) => {
+      const now = new Date().toISOString();
       const optimisticAssistantMessage: ChatMessage = {
         _id: `temp-assistant-${Date.now()}`,
         repoId,
         userId: 'assistant',
         role: 'assistant',
-        content: '...',
+        content: result.answer,
         createdAt: now,
         updatedAt: now,
       };
 
-      queryClient.setQueryData<ChatMessage[]>(chatKeys.history(repoId), [
-        ...previousMessages,
-        optimisticUserMessage,
-        optimisticAssistantMessage,
-      ]);
-
-      return { previousMessages, optimisticAssistantId: optimisticAssistantMessage._id };
-    },
-    onSuccess: (result, _, context) => {
       queryClient.setQueryData<ChatMessage[]>(chatKeys.history(repoId), (current) => {
-        if (!current) return current;
-        return current.map((message) =>
-          message._id === context?.optimisticAssistantId
-            ? { ...message, content: result.answer }
-            : message
-        );
+        if (!current) return [optimisticAssistantMessage];
+        return [...current, optimisticAssistantMessage];
       });
     },
     onError: (_, __, context) => {

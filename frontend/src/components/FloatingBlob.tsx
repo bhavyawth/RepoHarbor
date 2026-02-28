@@ -92,10 +92,10 @@ const blobs: BlobConfig[] = [
   },
 ];
 
-export default function FloatingBlob() {
+export default function FloatingBlob({numberOfBlobs = 7}: {numberOfBlobs?: number}) {
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[260vh] overflow-hidden">
-      {blobs.map((blob, index) => (
+    <div className="pointer-events-none absolute inset-0 top-0 z-0 overflow-hidden">
+      {blobs.slice(0, numberOfBlobs).map((blob, index) => (
         <motion.div
           key={index}
           className={`absolute rounded-full blur-3xl will-change-transform ${blob.color} ${blob.darkColor}`}

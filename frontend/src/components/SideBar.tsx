@@ -45,7 +45,7 @@ import { AnimatedThemeToggler } from './ui/animated-theme-toggler';
 import { RepoInfoSheet } from './RepoInfoSheet';
 import { useAuth, useLogout } from '../features/auth/auth.hooks';
 import { useChatStore } from '../store/chat.store';
-import {useDeleteRepo, useGetRepos, usePinRepo, useRepoSummary} from '../features/repo/repos.hooks';
+import { useDeleteRepo, useGetRepos, usePinRepo, useRepoSummary } from '../features/repo/repos.hooks';
 import type { Repo } from '../features/repo/repos.api';
 import { useRepoDetails } from '../features/github/github.hooks';
 
@@ -68,6 +68,7 @@ export default function AppSidebar() {
     data: repoInfo,
     isLoading: repoInfoLoading,
     isError: repoInfoError,
+    error: repoInfoErrorValue,
   } = useRepoDetails(
     repoInfoTarget?.owner ?? '',
     repoInfoTarget?.name ?? '',
@@ -77,7 +78,8 @@ export default function AppSidebar() {
     data: repoSummary,
     isLoading: repoSummaryLoading,
     isError: repoSummaryError,
-  } = useRepoSummary(repoInfoTarget?._id ?? '');
+    error: repoSummaryErrorValue,
+  } = useRepoSummary(repoInfoOpen && !!repoInfoTarget ? repoInfoTarget?._id : undefined);
 
   const pinnedChats: Repo[] = chats.filter((repo) => repo.isPinned).sort(
     (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
@@ -242,7 +244,7 @@ export default function AppSidebar() {
                                   {chat.name}
                                 </span>
                                 <span className="truncate text-xs text-sidebar-foreground/60">
-                                  {chat.name}
+                                  {chat.owner}
                                 </span>
                               </div>
                             </SidebarMenuButton>
@@ -268,7 +270,7 @@ export default function AppSidebar() {
                                   <Info className="size-4" />
                                   Repo Info
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="cursor-pointer gap-2 text-red-600 dark:text-red-400" 
+                                <DropdownMenuItem className="cursor-pointer gap-2 text-red-600 dark:text-red-400"
                                   onClick={() => handleDeleteRepo(chat._id)}
                                 >
                                   <Trash2 className="size-4" />
@@ -316,7 +318,7 @@ export default function AppSidebar() {
                                 {chat.name}
                               </span>
                               <span className="truncate text-xs text-sidebar-foreground/60">
-                                {chat.name}
+                                {chat.owner}
                               </span>
                             </div>
                           </SidebarMenuButton>
@@ -413,8 +415,19 @@ export default function AppSidebar() {
       <RepoInfoSheet
         repoInfoOpen={repoInfoOpen}
         setRepoInfoOpen={setRepoInfoOpen}
-        repoInfoLoading={repoInfoLoading || repoSummaryLoading}
-        repoInfoError={repoInfoError || repoSummaryError}
+        repoInfoLoading={repoSummaryLoading || repoInfoLoading}
+        repoInfoError={repoSummaryError || repoInfoError}
+        repoInfoErrorMessage={
+          repoSummaryError
+            ? (repoSummaryErrorValue instanceof Error
+              ? repoSummaryErrorValue.message
+              : 'Failed to load repository summary.')
+            : repoInfoError
+              ? (repoInfoErrorValue instanceof Error
+                ? repoInfoErrorValue.message
+                : 'Failed to load repo details.')
+              : undefined
+        }
         repoInfo={repoInfo}
         repoSummary={repoSummary}
         repoInfoTarget={

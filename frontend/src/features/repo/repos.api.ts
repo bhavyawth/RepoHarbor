@@ -52,6 +52,30 @@ export function normalizeIndexStatus(status?: Repo['indexStatus'] | string | nul
   return 'idle';
 }
 
+type ResolveIndexStatusInput = {
+  backendStatus?: Repo['indexStatus'] | string | null;
+  chatStatus?: Repo['indexStatus'] | string | null;
+  lastIndexedAt?: string | null;
+  localIndexing?: boolean;
+};
+
+export function resolveIndexStatus({
+  backendStatus,
+  chatStatus,
+  lastIndexedAt,
+  localIndexing = false,
+}: ResolveIndexStatusInput): NormalizedIndexStatus {
+  if (localIndexing) return 'running';
+  const normalizedBackend = normalizeIndexStatus(backendStatus);
+  const normalizedChat = normalizeIndexStatus(chatStatus);
+  const hasIndexedOnce =
+    !!lastIndexedAt || normalizedBackend === 'done' || normalizedChat === 'done';
+  if (normalizedBackend === 'running' || normalizedChat === 'running') return 'running';
+  if (hasIndexedOnce) return 'done';
+  if (normalizedBackend === 'failed' || normalizedChat === 'failed') return 'failed';
+  return 'idle';
+}
+
 export const reposApi = {
   registerRepo: async (data: RegisterRepoRequest): Promise<Repo> => {
     const { data: repo } = await api.post('/repos', data);
