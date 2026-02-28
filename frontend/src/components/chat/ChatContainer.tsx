@@ -9,6 +9,7 @@ type ChatContainerProps = {
   isChatReady: boolean;
   isThinking: boolean;
   sendError: string | null;
+  highlightedMessageId?: string | null;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
 };
 
@@ -18,6 +19,7 @@ export default function ChatContainer({
   isChatReady,
   isThinking,
   sendError,
+  highlightedMessageId,
   messagesEndRef,
 }: ChatContainerProps) {
   return (
@@ -47,7 +49,11 @@ export default function ChatContainer({
       )}
 
       {messages.map((message) => (
-        <MessageRenderer key={message._id} message={message} />
+        <MessageRenderer
+          key={message._id}
+          message={message}
+          isHighlighted={highlightedMessageId === message._id}
+        />
       ))}
 
       {isThinking && (

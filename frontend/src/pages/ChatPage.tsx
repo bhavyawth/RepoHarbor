@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useRef, type FormEvent, type KeyboardEvent } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { useChatStore } from '../store/chat.store';
 import { resolveIndexStatus } from '../features/repo/repos.api';
@@ -12,10 +12,12 @@ import IndexingTerminal from '../components/chat/IndexingTerminal';
 
 export default function ChatPage() {
   const { chatId } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const { chats, indexingByChatId, setActiveChatId } = useChatStore();
   const [draftsByChatId, setDraftsByChatId] = useState<Record<string, string>>({});
   const [sendError, setSendError] = useState<string | null>(null);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const [showIndexingTerminal, setShowIndexingTerminal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -127,6 +129,23 @@ export default function ChatPage() {
     setShowIndexingTerminal(false);
   }, [effectiveStatus]);
 
+  useEffect(() => {
+    const highlightId = searchParams.get('highlight');
+    if (!highlightId || messages.length === 0) return;
+    const target = document.getElementById(`message-${highlightId}`);
+    if (!target) return;
+    setHighlightedMessageId(highlightId);
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const timeout = window.setTimeout(() => {
+      setHighlightedMessageId(null);
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete('highlight');
+      setSearchParams(nextParams, { replace: true });
+    }, 2000);
+
+    return () => window.clearTimeout(timeout);
+  }, [messages, searchParams, setSearchParams]);
+
   return (
     <div className="flex h-full flex-col bg-white dark:bg-black">
       <div className="flex-1 overflow-y-auto px-4 py-6 modern-scroll">
@@ -136,6 +155,7 @@ export default function ChatPage() {
           isChatReady={isChatReady}
           isThinking={sendMessageMutation.isPending}
           sendError={sendError}
+          highlightedMessageId={highlightedMessageId}
           messagesEndRef={messagesEndRef}
         />
       </div>

@@ -12,14 +12,20 @@ function formatTimestamp(iso: string) {
 
 type MessageRendererProps = {
   message: ChatMessage;
+  isHighlighted?: boolean;
 };
 
-export default function MessageRenderer({ message }: MessageRendererProps) {
+export default function MessageRenderer({ message, isHighlighted = false }: MessageRendererProps) {
   const { data: user } = useAuth();
 
   if (message.role === 'user') {
     return (
-      <div className="animate-in fade-in-0 slide-in-from-bottom-1 duration-300 flex justify-end gap-3">
+      <div
+        id={`message-${message._id}`}
+        className={`animate-in fade-in-0 slide-in-from-bottom-1 duration-300 flex justify-end gap-3 rounded-xl transition-colors ${
+          isHighlighted ? 'bg-sky-100/80 dark:bg-sky-500/20' : ''
+        } scroll-mt-24`}
+      >
         <div className="max-w-[82%] rounded-2xl rounded-tr-md border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-900 dark:text-slate-100">{message.content}</p>
           <p className="mt-2 text-right text-[11px] text-slate-500 dark:text-slate-400">
@@ -34,7 +40,12 @@ export default function MessageRenderer({ message }: MessageRendererProps) {
   }
 
   return (
-    <div className="animate-in fade-in-0 slide-in-from-bottom-1 duration-300 flex justify-start gap-3">
+    <div
+      id={`message-${message._id}`}
+      className={`animate-in fade-in-0 slide-in-from-bottom-1 duration-300 flex justify-start gap-3 rounded-xl transition-colors ${
+        isHighlighted ? 'bg-sky-100/80 dark:bg-sky-500/20' : ''
+      } scroll-mt-24`}
+    >
       <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
         <Brain className="h-4 w-4" />
       </div>

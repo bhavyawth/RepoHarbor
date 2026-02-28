@@ -49,7 +49,11 @@ import { useDeleteRepo, useGetRepos, usePinRepo, useRepoSummary } from '../featu
 import type { Repo } from '../features/repo/repos.api';
 import { useRepoDetails } from '../features/github/github.hooks';
 
-export default function AppSidebar() {
+type AppSidebarProps = {
+  onOpenSearch?: () => void;
+};
+
+export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
   const { state } = useSidebar();
   let isCollapsed = state === 'collapsed';
   const { data: repos } = useGetRepos();
@@ -173,6 +177,7 @@ export default function AppSidebar() {
             <SidebarMenuButton
               tooltip="Search Chats"
               size="lg"
+              onClick={onOpenSearch}
               className="h-10 rounded-xl border border-slate-200/80 bg-white text-slate-600 shadow-sm transition-colors hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700/80 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100
                 group-data-[collapsible=icon]:justify-center
                 group-data-[collapsible=icon]:px-0
@@ -196,7 +201,7 @@ export default function AppSidebar() {
                 setActiveChatId(null);
                 navigate('/chat/new');
               }}
-              className="h-10 rounded-xl bg-slate-900 text-white shadow-sm transition-all hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200
+              className="h-10 rounded-xl bg-slate-900 text-white  hover:text-amber-50 shadow-sm transition-all hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200
                 group-data-[collapsible=icon]:justify-center
                 group-data-[collapsible=icon]:px-0
                 group-data-[collapsible=icon]:h-11

@@ -1,10 +1,24 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import { chatApi, type ChatMessage } from './chat.api';
+
+const SEARCH_DEBOUNCE_MS = 300;
+const SEARCH_MIN_LENGTH = 2;
 
 export const chatKeys = {
   all: ['chat'] as const,
   history: (repoId: string) => [...chatKeys.all, 'history', repoId] as const,
+  searchMessages: (query: string) => [...chatKeys.all, 'search', query] as const,
 };
+
+function useDebouncedValue(value: string, delay: number) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebouncedValue(value), delay);
+    return () => window.clearTimeout(timeout);
+  }, [value, delay]);
+  return debouncedValue;
+}
 
 export function useChatHistory(repoId: string, enabled = true) {
   return useQuery({
@@ -76,5 +90,17 @@ export function useClearChat(repoId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: chatKeys.history(repoId) });
     },
+  });
+}
+
+export function useMessageSearch(query: string, isOpen: boolean) {
+  const trimmedQuery = query.trim();
+  const debouncedQuery = useDebouncedValue(trimmedQuery, SEARCH_DEBOUNCE_MS);
+  return useQuery({
+    queryKey: chatKeys.searchMessages(debouncedQuery),
+    queryFn: () => chatApi.searchMessages(debouncedQuery),
+    enabled: isOpen && debouncedQuery.length >= SEARCH_MIN_LENGTH,
+    staleTime: 20 * 1000,
+    gcTime: 2 * 60 * 1000,
   });
 }

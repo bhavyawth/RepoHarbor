@@ -27,6 +27,7 @@ const ChatMsgSchema = new Schema(
 
 ChatMsgSchema.index({ repoId: 1, createdAt: -1 });
 ChatMsgSchema.index({ repoId: 1, userId: 1 });
+ChatMsgSchema.index({ userId: 1, content: 'text' });
 
 export type ChatMsgDocType = InferSchemaType<typeof ChatMsgSchema>;
 export type ChatMsgDocument = HydratedDocument<ChatMsgDocType>;

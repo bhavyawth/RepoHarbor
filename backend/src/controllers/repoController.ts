@@ -82,6 +82,7 @@ export const deleteRepo = async (req: Request, res: Response) => {
     }
     //order matters here
     await Chunk.deleteMany({ repoId: repo._id });
+    await ChatMsg.deleteMany({ repoId: repo._id });
     await Repo.findByIdAndDelete(repo._id);
     return res.status(200).json({ message: `Deleted ${repo.owner}/${repo.name}` });
   } catch (error) {
