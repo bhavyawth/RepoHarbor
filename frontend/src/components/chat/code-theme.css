@@ -1,0 +1,114 @@
+.markdown-content .code-theme .hljs {
+  color: #24292f;
+  background: transparent;
+}
+
+.markdown-content .code-theme .hljs-comment,
+.markdown-content .code-theme .hljs-quote {
+  color: #6e7781;
+  font-style: italic;
+}
+
+.markdown-content .code-theme .hljs-keyword,
+.markdown-content .code-theme .hljs-selector-tag,
+.markdown-content .code-theme .hljs-selector-class,
+.markdown-content .code-theme .hljs-selector-id,
+.markdown-content .code-theme .hljs-selector-pseudo,
+.markdown-content .code-theme .hljs-meta .hljs-keyword,
+.markdown-content .code-theme .hljs-doctag,
+.markdown-content .code-theme .hljs-section {
+  color: #cf222e;
+}
+
+.markdown-content .code-theme .hljs-string,
+.markdown-content .code-theme .hljs-attr,
+.markdown-content .code-theme .hljs-addition,
+.markdown-content .code-theme .hljs-template-tag,
+.markdown-content .code-theme .hljs-template-variable {
+  color: #0a7f37;
+}
+
+.markdown-content .code-theme .hljs-title,
+.markdown-content .code-theme .hljs-title.class_,
+.markdown-content .code-theme .hljs-title.function_,
+.markdown-content .code-theme .hljs-function .hljs-title {
+  color: #8250df;
+}
+
+.markdown-content .code-theme .hljs-number,
+.markdown-content .code-theme .hljs-literal,
+.markdown-content .code-theme .hljs-variable,
+.markdown-content .code-theme .hljs-params,
+.markdown-content .code-theme .hljs-symbol,
+.markdown-content .code-theme .hljs-bullet {
+  color: #0550ae;
+}
+
+.markdown-content .code-theme .hljs-built_in,
+.markdown-content .code-theme .hljs-builtin-name,
+.markdown-content .code-theme .hljs-property,
+.markdown-content .code-theme .hljs-type {
+  color: #953800;
+}
+
+.markdown-content .code-theme .hljs-operator,
+.markdown-content .code-theme .hljs-punctuation {
+  color: #57606a;
+}
+
+.dark .markdown-content .code-theme .hljs {
+  color: #d4d4d4;
+}
+
+.dark .markdown-content .code-theme .hljs-comment,
+.dark .markdown-content .code-theme .hljs-quote {
+  color: #7f8ea3;
+  font-style: italic;
+}
+
+.dark .markdown-content .code-theme .hljs-keyword,
+.dark .markdown-content .code-theme .hljs-selector-tag,
+.dark .markdown-content .code-theme .hljs-selector-class,
+.dark .markdown-content .code-theme .hljs-selector-id,
+.dark .markdown-content .code-theme .hljs-selector-pseudo,
+.dark .markdown-content .code-theme .hljs-meta .hljs-keyword,
+.dark .markdown-content .code-theme .hljs-doctag,
+.dark .markdown-content .code-theme .hljs-section {
+  color: #c586c0;
+}
+
+.dark .markdown-content .code-theme .hljs-string,
+.dark .markdown-content .code-theme .hljs-attr,
+.dark .markdown-content .code-theme .hljs-addition,
+.dark .markdown-content .code-theme .hljs-template-tag,
+.dark .markdown-content .code-theme .hljs-template-variable {
+  color: #ce9178;
+}
+
+.dark .markdown-content .code-theme .hljs-title,
+.dark .markdown-content .code-theme .hljs-title.class_,
+.dark .markdown-content .code-theme .hljs-title.function_,
+.dark .markdown-content .code-theme .hljs-function .hljs-title {
+  color: #dcdcaa;
+}
+
+.dark .markdown-content .code-theme .hljs-number,
+.dark .markdown-content .code-theme .hljs-literal,
+.dark .markdown-content .code-theme .hljs-variable,
+.dark .markdown-content .code-theme .hljs-params,
+.dark .markdown-content .code-theme .hljs-symbol,
+.dark .markdown-content .code-theme .hljs-bullet {
+  color: #b5cea8;
+}
+
+.dark .markdown-content .code-theme .hljs-built_in,
+.dark .markdown-content .code-theme .hljs-builtin-name,
+.dark .markdown-content .code-theme .hljs-property,
+.dark .markdown-content .code-theme .hljs-type {
+  color: #4fc1ff;
+}
+
+.dark .markdown-content .code-theme .hljs-operator,
+.dark .markdown-content .code-theme .hljs-punctuation {
+  color: #c5cddb;
+}

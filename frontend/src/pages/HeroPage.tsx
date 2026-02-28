@@ -274,7 +274,7 @@ export default function Hero() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-600 to-blue-600 p-8 lg:p-10"
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-800 to-blue-900 p-8 lg:p-10"
         >
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#fff2_1px,transparent_1px),linear-gradient(to_bottom,#fff2_1px,transparent_1px)] bg-[size:32px_32px]" />
           <div className="relative z-10 grid items-center gap-6 lg:grid-cols-2">

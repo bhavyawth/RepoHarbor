@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState, useRef, type FormEvent, type KeyboardEvent } from 'react';
 import { useParams } from 'react-router-dom';
+import { AnimatePresence, motion } from 'motion/react';
 import { useChatStore } from '../store/chat.store';
 import { resolveIndexStatus } from '../features/repo/repos.api';
 import { useRepoIndexStatus, reposKeys } from '../features/repo/repos.hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { useChatHistory, useSendMessage } from '../features/chat/chat.hooks';
 import { Button } from '../components/ui/button';
-import { Loader2 } from 'lucide-react';
 import ChatContainer from '../components/chat/ChatContainer';
+import IndexingTerminal from '../components/chat/IndexingTerminal';
 
 export default function ChatPage() {
   const { chatId } = useParams();
@@ -15,6 +16,7 @@ export default function ChatPage() {
   const { chats, indexingByChatId, setActiveChatId } = useChatStore();
   const [draftsByChatId, setDraftsByChatId] = useState<Record<string, string>>({});
   const [sendError, setSendError] = useState<string | null>(null);
+  const [showIndexingTerminal, setShowIndexingTerminal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const message = chatId ? draftsByChatId[chatId] ?? '' : '';
@@ -42,10 +44,6 @@ export default function ChatPage() {
   const isIndexing = effectiveStatus === 'running';
   const isChatReady = effectiveStatus === 'done';
   const isInputDisabled = !isChatReady || isIndexing || sendMessageMutation.isPending;
-  // const renderedMessages = useMemo(
-  //   () => messages.filter((chatMessage) => !(chatMessage.role === 'assistant' && chatMessage.content.trim() === '...')),
-  //   [messages]
-  // );
 
   const setMessageForActiveChat = (nextMessage: string) => {
     if (!chatId) return;
@@ -117,6 +115,18 @@ export default function ChatPage() {
     input.style.height = `${nextHeight}px`;
   }, [message]);
 
+  useEffect(() => {
+    if (effectiveStatus === 'running' || effectiveStatus === 'failed') {
+      setShowIndexingTerminal(true);
+      return;
+    }
+    if (effectiveStatus === 'done') {
+      const timeout = window.setTimeout(() => setShowIndexingTerminal(false), 1000);
+      return () => window.clearTimeout(timeout);
+    }
+    setShowIndexingTerminal(false);
+  }, [effectiveStatus]);
+
   return (
     <div className="flex h-full flex-col bg-white dark:bg-black">
       <div className="flex-1 overflow-y-auto px-4 py-6 modern-scroll">
@@ -170,19 +180,30 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {isIndexing && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/80 dark:bg-black/80 backdrop-blur-sm">
-          <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-6 py-4 shadow-lg">
-            <div className="flex items-center gap-3">
-              <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
-              <div>
-                <p className="text-sm font-medium text-slate-900 dark:text-white">Indexing repository</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">This may take a few minutes...</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {showIndexingTerminal && (
+          <motion.div
+            className="absolute inset-0 z-20 flex items-center justify-center bg-slate-950/25 backdrop-blur-[3px]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22 }}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 14, scale: 0.985 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.985 }}
+              transition={{ duration: 0.22 }}
+            >
+              <IndexingTerminal
+                repoName={activeChat?.name}
+                status={effectiveStatus}
+                errorMessage={repoIndexStatus?.indexError ?? activeChat?.indexError}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,6 +1,5 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
-import rehypeHighlight from 'rehype-highlight';
 import remarkGfm from 'remark-gfm';
 import CodeBlock from './CodeBlock';
 
@@ -34,7 +33,6 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
     <div className="markdown-content text-sm text-slate-800 dark:text-slate-200">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeHighlight]}
         components={{
           pre: ({ children }) => {
             const codeNode = React.Children.toArray(children)[0] as
