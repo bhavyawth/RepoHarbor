@@ -4,6 +4,7 @@ import { cn } from '../../lib/utils';
 type TerminalStatus = 'idle' | 'running' | 'done' | 'failed';
 
 interface IndexingTerminalProps {
+  repoId: string;
   repoName?: string;
   status: TerminalStatus;
   errorMessage?: string | null;
@@ -39,6 +40,7 @@ function getIndexingSteps(repoName?: string): string[] {
 }
 
 export default function IndexingTerminal({
+  repoId,
   repoName,
   status,
   errorMessage,
@@ -58,7 +60,7 @@ export default function IndexingTerminal({
 
   const steps = useMemo(() => getIndexingSteps(repoName), [repoName]);
   const terminalTitle = repoName ? `${repoName} indexing` : 'Repository indexing';
-
+  
   useEffect(() => {
     const timer = window.setInterval(
       () => setCursorVisible((prev) => !prev),
@@ -125,25 +127,29 @@ export default function IndexingTerminal({
   };
 
   useEffect(() => {
-    if (status !== 'running') return;
-    cancelTypingRef.current = false;
-    terminalEventKeyRef.current = '';
-    setRenderedLines([]);
-    setTypingLine('');
+    cancelTypingRef.current = true;
     queueRef.current = [];
     clearAllTimers();
+    setRenderedLines([]);
+    setTypingLine('');
+    terminalEventKeyRef.current = '';
+
+    if (status !== 'running') return;
+
+    cancelTypingRef.current = false;
     steps.forEach((line, index) => {
       scheduleTimeout(() => enqueueLine(line), index * STEP_DELAY_MS);
     });
+
     return () => {
       cancelTypingRef.current = true;
       queueRef.current = [];
       clearAllTimers();
     };
-  }, [status, steps]);
+  }, [repoId, status, steps]);
 
   useEffect(() => {
-    const eventKey = `${status}:${errorMessage ?? ''}`;
+    const eventKey = `${repoId}:${status}:${errorMessage ?? ''}`;
     if (terminalEventKeyRef.current === eventKey) return;
     terminalEventKeyRef.current = eventKey;
 
@@ -153,7 +159,7 @@ export default function IndexingTerminal({
       const errorMsg = errorMessage?.trim() || 'Indexing failed unexpectedly.';
       enqueueLine(`Error: ${errorMsg}`);
     }
-  }, [status, errorMessage]);
+  }, [repoId, status, errorMessage]);
 
   useEffect(() => () => clearAllTimers(), []);
 

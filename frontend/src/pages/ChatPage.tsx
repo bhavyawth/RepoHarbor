@@ -18,7 +18,7 @@ export default function ChatPage() {
   const [draftsByChatId, setDraftsByChatId] = useState<Record<string, string>>({});
   const [sendError, setSendError] = useState<string | null>(null);
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
-  const [showIndexingTerminal, setShowIndexingTerminal] = useState(false);
+  const [indexingRepoId, setIndexingRepoId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const message = chatId ? draftsByChatId[chatId] ?? '' : '';
@@ -44,6 +44,7 @@ export default function ChatPage() {
   );
 
   const isIndexing = effectiveStatus === 'running';
+  const shouldShowIndexingTerminal = !!chatId && indexingRepoId === chatId && effectiveStatus === 'running';
   const isChatReady = effectiveStatus === 'done';
   const isInputDisabled = !isChatReady || isIndexing || sendMessageMutation.isPending;
 
@@ -118,16 +119,22 @@ export default function ChatPage() {
   }, [message]);
 
   useEffect(() => {
-    if (effectiveStatus === 'running' || effectiveStatus === 'failed') {
-      setShowIndexingTerminal(true);
+    if (!chatId) {
+      setIndexingRepoId(null);
       return;
     }
-    if (effectiveStatus === 'done') {
-      const timeout = window.setTimeout(() => setShowIndexingTerminal(false), 1000);
-      return () => window.clearTimeout(timeout);
+
+    if (effectiveStatus === 'running') {
+      if (indexingRepoId !== chatId) {
+        setIndexingRepoId(chatId);
+      }
+      return;
     }
-    setShowIndexingTerminal(false);
-  }, [effectiveStatus]);
+
+    if (indexingRepoId === chatId) {
+      setIndexingRepoId(null);
+    }
+  }, [chatId, effectiveStatus, indexingRepoId]);
 
   useEffect(() => {
     const highlightId = searchParams.get('highlight');
@@ -201,7 +208,7 @@ export default function ChatPage() {
       </div>
 
       <AnimatePresence>
-        {showIndexingTerminal && (
+        {shouldShowIndexingTerminal && (
           <motion.div
             className="absolute inset-0 z-20 flex items-center justify-center bg-slate-950/25 backdrop-blur-[3px]"
             initial={{ opacity: 0 }}
@@ -216,6 +223,8 @@ export default function ChatPage() {
               transition={{ duration: 0.22 }}
             >
               <IndexingTerminal
+                key={chatId}
+                repoId={chatId ?? ''}
                 repoName={activeChat?.name}
                 status={effectiveStatus}
                 errorMessage={repoIndexStatus?.indexError ?? activeChat?.indexError}

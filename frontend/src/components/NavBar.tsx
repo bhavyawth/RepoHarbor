@@ -34,6 +34,7 @@ import { resolveIndexStatus } from '../features/repo/repos.api';
 import { useEffect, useState } from 'react';
 import { RepoStructurePanel } from './RepoStructurePanel';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import MarkdownRenderer from './chat/MarkdownRenderer';
 
 export default function Navbar() {
   const { data: user } = useAuth();
@@ -288,9 +289,9 @@ export default function Navbar() {
               </div>
             )}
             {!repoSummaryLoading && !repoSummaryError && repoSummary?.summary && (
-              <p className="max-h-64 overflow-y-auto whitespace-pre-wrap leading-relaxed">
-                {repoSummary.summary}
-              </p>
+              <div className="max-h-64 overflow-y-auto pr-1">
+                <MarkdownRenderer content={repoSummary.summary} />
+              </div>
             )}
           </div>
         )}

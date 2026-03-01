@@ -2,12 +2,81 @@ import { Request, Response } from "express";
 import Repo from "../models/repoModel";
 import Chunk from "../models/chunkModel";
 import { getRepoDetails, parseGitHubUrl } from "../services/githubService";
-import { chunkText } from "../services/chunkService";
+import { chunkText, type TextChunk } from "../services/chunkService";
 import { findSimilarChunks, generateEmbedding, generateEmbeddingsForChunks } from "../services/embeddingService";
 import { buildJsonTree, hasAllowedExtension, MAX_FILE_SIZE, shouldSkipPath, treeToPrompt } from "../utils/fileUtils";
 import { getFileContent, getRepoTree } from "../services/githubService";
 import { generateAnswer } from "../services/llm/chatCompletion";
 import ChatMsg from "../models/chatMsgModel";
+import type { RepoDocument } from "../models/repoModel";
+
+const INGEST_BATCH_SIZE = 10;
+
+const getErrorMessage = (error: unknown): string => {
+  if (error instanceof Error && error.message) return error.message;
+  return "Unknown error";
+};
+
+async function processIndexing(repo: RepoDocument): Promise<void> {
+  const repoName = `${repo.owner}/${repo.name}`;
+  await Chunk.deleteMany({ repoId: repo._id });
+  const treeEntries = await getRepoTree(
+    repo.owner, 
+    repo.name, 
+    repo.defaultBranch ?? undefined
+  );
+  const filePaths = treeEntries
+    .filter((entry) => entry.type === "blob")
+    .filter((entry) => !shouldSkipPath(entry.path))
+    .filter((entry) => hasAllowedExtension(entry.path))
+    .filter((entry) => !entry.size || entry.size <= MAX_FILE_SIZE)
+    .map((entry) => entry.path);
+  if (filePaths.length === 0) {
+    throw new Error("No indexable files found in repository");
+  }
+  let totalChunks = 0;
+  for (let i = 0; i < filePaths.length; i += INGEST_BATCH_SIZE) {
+    const batchPaths = filePaths.slice(i, i + INGEST_BATCH_SIZE);
+    const batchChunks: TextChunk[] = [];
+    for (const filePath of batchPaths) {
+      try {
+        const content = await getFileContent(
+          repo.owner, 
+          repo.name, 
+          filePath, 
+          repo.defaultBranch ?? undefined
+        );
+        const chunks = chunkText(content, repoName, filePath);
+        batchChunks.push(...chunks);
+      } catch (error: unknown) {
+        console.warn(`[ingestRepo] Skipping ${filePath}:`, getErrorMessage(error));
+      }
+    }
+    if (batchChunks.length === 0) continue;
+    const embeddedChunks = await generateEmbeddingsForChunks(batchChunks);
+    if (embeddedChunks.length === 0) continue;
+    const chunkDocs = embeddedChunks.map((ec) => ({
+      repoId: repo._id,
+      filePath: ec.filepath,
+      content: ec.content,
+      startIndex: ec.startIndex,
+      chunkIndex: ec.chunkIndex,
+      embedding: ec.embedding,
+    }));
+    await Chunk.insertMany(chunkDocs);
+    totalChunks += chunkDocs.length;
+  }
+  if (totalChunks === 0) {
+    throw new Error("No chunks were successfully indexed");
+  }
+  await Repo.findByIdAndUpdate(repo._id, {
+    indexStatus: "indexed",
+    lastIndexedAt: new Date(),
+    indexError: null,
+  });
+
+  console.log(`[ingestRepo] Successfully indexed ${repoName}: ${totalChunks} chunks from ${filePaths.length} files`);
+}
 
 // ============================================================
 // POST /repos — Register a repo
@@ -21,7 +90,6 @@ export const registerRepo = async (req: Request, res: Response) => {
   if (!parsed) return res.status(400).json({ message: "Invalid GitHub input. Provide either https://github.com/owner/name or owner/name" });
   const { owner, name } = parsed;
   let repoDetails;
-
   try {
     repoDetails = await getRepoDetails(owner, name);
   } catch (error: any) {
@@ -93,58 +161,47 @@ export const deleteRepo = async (req: Request, res: Response) => {
 // POST /repos/:repoId/ingest — Ingest a repository
 // ============================================================
 export const ingestRepo = async (req: Request, res: Response) => {
-  const { repoId } = req.params;
-  const repo = await Repo.findById(repoId);
-  if (!repo) return res.status(404).json({ message: "Repo not found" });
-  if (repo.userId.toString() !== req.user!._id.toString()) return res.status(403).json({ message: "Not authorized" });
-
   try {
-    await Repo.findByIdAndUpdate(repoId, { indexStatus: "indexing" });
-    await Chunk.deleteMany({ repoId: repo._id });
-    const treeEntries = await getRepoTree(repo.owner, repo.name, repo.defaultBranch ?? undefined);
-    const filePaths = treeEntries
-      .filter((entry) => entry.type === "blob")
-      .filter((entry) => !shouldSkipPath(entry.path))
-      .filter((entry) => hasAllowedExtension(entry.path))
-      .filter((entry) => entry.size === undefined || entry.size <= MAX_FILE_SIZE)
-      .map((entry) => entry.path);
-    // const repoTree = buildJsonTree(filePaths);
-    // await Repo.findByIdAndUpdate(repoId, { repoTree });
-    const allChunks = [];
-    for (const filePath of filePaths) {
-      const content = await getFileContent(repo.owner, repo.name, filePath, repo.defaultBranch ?? undefined);
-      const chunks = chunkText(
-        content,
-        `${repo.owner}/${repo.name}`,
-        filePath
-      );
-      allChunks.push(...chunks);
-    }
-    
-    const embeddedChunks = await generateEmbeddingsForChunks(allChunks);
-    const chunkDocs = embeddedChunks.map(ec => ({
-      repoId: repo._id,
-      filePath: ec.filepath,
-      content: ec.content,
-      startIndex: ec.startIndex,
-      chunkIndex: ec.chunkIndex,
-      embedding: ec.embedding,
-    }));
-    await Chunk.insertMany(chunkDocs);
-    await Repo.findByIdAndUpdate(repoId, {
-      indexStatus: "indexed",
-      lastIndexedAt: new Date(),
-      indexError: null,
+    const { repoId } = req.params;
+    const repo = await Repo.findById(repoId);
+    if (!repo)  return res.status(404).json({ message: "Repo not found" });
+    if (repo.userId.toString() !== req.user!._id.toString()) return res.status(403).json({ message: "Not authorized" });
+    const indexingRepo = await Repo.findOneAndUpdate(
+      {
+        _id: repo._id,
+        userId: req.user!._id,
+        indexStatus: { $ne: "indexing" },
+      },
+      {
+        $set: {
+          indexStatus: "indexing",
+          indexError: null,
+        },
+      },
+      { new: true }
+    );
+    if (!indexingRepo) return res.status(409).json({ message: "Indexing already in progress" });
+    res.status(202).json({ message: "Indexing started", repoId, });
+    processIndexing(indexingRepo).catch(async (error: unknown) => {
+      const errorMessage = getErrorMessage(error);
+      console.error(`[ingestRepo] Indexing failed for ${indexingRepo.owner}/${indexingRepo.name}:`, errorMessage);
+      try {
+        await Repo.findByIdAndUpdate(indexingRepo._id, {
+          indexStatus: "failed",
+          indexError: errorMessage,
+        });
+      } catch (updateError: unknown) {
+        console.error(`[ingestRepo] Failed to update repo status:`, getErrorMessage(updateError));
+      }
     });
-    return res.status(200).json({ message: "Ingestion complete" });
-  } catch (error: any) {
-    await Repo.findByIdAndUpdate(repoId, {
-      indexStatus: "failed",
-      indexError: error.message || "Unknown error",
+  } catch (error: unknown) {
+    return res.status(500).json({ 
+      message: "Failed to start indexing", 
+      error: getErrorMessage(error) 
     });
-    return res.status(500).json({ message: "Ingestion failed", error: error.message });
   }
 };
+
 // ============================================================
 // POST /repos/:repoId/chat — Chat with a repository
 // ============================================================
@@ -170,7 +227,7 @@ export const chatWithRepo = async (req: Request, res: Response) => {
     if (!repo) return res.status(404).json({ message: "Repo not found" });
     if (repo.userId.toString() !== req.user!._id.toString()) return res.status(403).json({ message: "Not authorized" });
     if (repo.indexStatus !== "indexed") return res.status(400).json({ message: "Repo is not indexed yet" });
-    Repo.findByIdAndUpdate(repoId, {}); //to update recent access
+    Repo.findByIdAndUpdate(repoId, { $set: { lastAccessedAt: new Date() } }); //to update recent access
     const questionEmbedding = await generateEmbedding(question);
     const chunks = (await Chunk.find({ repoId })).map(c => ({
       repo: repo.owner + "/" + repo.name,
@@ -206,8 +263,8 @@ export const chatWithRepo = async (req: Request, res: Response) => {
     });
 
     return res.status(200).json({ answer });
-  } catch (error: any) {
-    return res.status(500).json({ message: "Failed to generate answer", error: error.message });
+  } catch (error: unknown) {
+    return res.status(500).json({ message: "Failed to generate answer", error: getErrorMessage(error) });
   }
 }
 // ============================================================
