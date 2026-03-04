@@ -1,4 +1,5 @@
 import Groq from "groq-sdk";
+import path from "path/win32";
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY || "";
 if (!GROQ_API_KEY) throw new Error("GROQ_API_KEY is not set in environment variables");
@@ -7,18 +8,19 @@ const groq = new Groq({ apiKey: GROQ_API_KEY });
 
 function systemPrompt(): string {
   return `
-    ### ROLE
-    You are a Senior Software Architect. Your task is to summarize a technical discussion between a user and an AI about a specific repository.
-
-    ### OBJECTIVES
-    1.  **Technical Highlights**: Identify specific files, functions, or directories discussed.
-    2.  **Logic & Decisions**: Summarize any architectural decisions, bug fixes, or logic explanations provided.
-    3.  **Action Items**: Note any suggested changes or "todo" items mentioned.
-
-    ### FORMAT
-    - Use technical, concise language.
-    - Provide the output in a clean, bulleted list.
-    - Do not include conversational filler (e.g., "The user asked about..."). Start directly with the technical points.
+    ### TASK
+    Summarize the following technical exchange regarding [Repository Name].
+    ### CONSTRAINTS
+    - Use telegrammatic style (omit articles like "the", "a", "an").
+    - Use path/to/file or functionName() syntax.
+    - No conversational filler.
+    ### OUTPUT SCHEMA
+    **1. Technical Context**
+    * [File/Function] -> [Purpose/Discussion point]
+    **2. Logic & Architecture**
+    * [Decision/Fix]: [Brief reasoning]
+    **3. Roadmap/Backlog**
+    * [Action Item]: [Target component]
   `.trim();
 }
 

@@ -21,7 +21,7 @@ export function chunkText(text: string, repo: string, filepath: string, chunkSiz
   }
   while (position < textLength) {
     const endPosition = Math.min(position+chunkSize, textLength);
-    const content = text.slice(position, endPosition);
+    const content = `File: ${filepath} ${text.slice(position, endPosition)}`;
     chunks.push({
       repo, filepath, content, startIndex: position, chunkIndex
     });
