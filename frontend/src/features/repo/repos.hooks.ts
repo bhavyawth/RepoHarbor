@@ -9,7 +9,7 @@ import { useChatStore } from '../../store/chat.store';
 export const reposKeys = {
   all: ['repos'] as const,
   list: () => [...reposKeys.all, 'list'] as const,
-  detail: (id: string) => [...reposKeys.all, 'detail', id] as const,
+  detail: (id: string) => ['repo', id] as const,
   summary: (id: string) => [...reposKeys.all, 'summary', id] as const,
   structure: (id: string) => [...reposKeys.all, 'structure', id] as const,
   indexStatus: (id: string) => [...reposKeys.all, 'index-status', id] as const,
@@ -74,8 +74,9 @@ export function useIngestRepo() {
   return useMutation({
     mutationFn: reposApi.ingestRepo,
     onSuccess: (_, repoId) => {
-      queryClient.invalidateQueries({ queryKey: reposKeys.list() });
+      queryClient.invalidateQueries({ queryKey: reposKeys.all });
       queryClient.invalidateQueries({ queryKey: reposKeys.detail(repoId) });
+      queryClient.invalidateQueries({ queryKey: reposKeys.indexStatus(repoId) });
     },
   });
 }
@@ -130,7 +131,7 @@ export function useRepoIndexStatus(repoId?: string, shouldPoll = true) {
     refetchInterval: (query) => {
       if (!shouldPoll) return false;
       const status = query.state.data?.indexStatus;
-      return status === 'indexing' || status === 'running' ? 2000 : false;
+      return status === 'running' ? 2000 : false;
     },
   });
 }

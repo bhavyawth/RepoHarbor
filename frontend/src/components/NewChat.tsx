@@ -13,7 +13,7 @@ export default function NewChat() {
   const [repoUrl, setRepoUrl] = useState('');
   const [error, setError] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-  const { chats, addChat, setActiveChatId } = useChatStore();
+  const { addChat, setActiveChatId } = useChatStore();
   const registerRepoMutation = useRegisterRepo();
   const welcomeHeadline = useMemo(() => {
     const phrases = [
@@ -55,15 +55,6 @@ const processRegistration = async (url: string) => {
 const handleCreateChat = (e: FormEvent) => {
   e.preventDefault();
   const trimmedInput = repoUrl.trim();
-  const normalizedInput = trimmedInput
-    .replace("https://github.com/", "")
-    .replace("http://github.com/", "")
-    .replace(/\/$/, "");
-  const existingChat = chats.find((chat) => `${chat.owner}/${chat.name}` === normalizedInput);
-  if (existingChat) {
-    navigate(`/chat/${existingChat._id}`);
-    return;
-  }
   processRegistration(trimmedInput);
 };
 

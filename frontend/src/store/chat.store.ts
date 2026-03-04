@@ -14,8 +14,6 @@ interface ChatState {
   setRepoInfoOpen: (open: boolean) => void
   repoInfoTarget: Repo | null
   setRepoInfoTarget: (repo: Repo | null) => void
-  indexingByChatId: Record<string, boolean>
-  setChatIndexing: (chatId: string, isIndexing: boolean) => void
 }
 
 export const useChatStore = create<ChatState>((set) => ({
@@ -59,13 +57,4 @@ export const useChatStore = create<ChatState>((set) => ({
     set({
       repoInfoTarget: repo,
     }),
-
-  indexingByChatId: {},
-  setChatIndexing: (chatId, isIndexing) =>
-    set((state) => ({
-      indexingByChatId: {
-        ...state.indexingByChatId,
-        [chatId]: isIndexing,
-      },
-    })),
 }))

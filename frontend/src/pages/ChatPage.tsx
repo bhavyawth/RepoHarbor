@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState, useRef, type FormEvent, type KeyboardEven
 import { useParams, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { useChatStore } from '../store/chat.store';
-import { resolveIndexStatus } from '../features/repo/repos.api';
 import { useRepoIndexStatus, reposKeys } from '../features/repo/repos.hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { useChatHistory, useSendMessage } from '../features/chat/chat.hooks';
@@ -14,11 +13,10 @@ export default function ChatPage() {
   const { chatId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
-  const { chats, indexingByChatId, setActiveChatId } = useChatStore();
+  const { chats, setActiveChatId } = useChatStore();
   const [draftsByChatId, setDraftsByChatId] = useState<Record<string, string>>({});
   const [sendError, setSendError] = useState<string | null>(null);
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
-  const [indexingRepoId, setIndexingRepoId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const message = chatId ? draftsByChatId[chatId] ?? '' : '';
@@ -31,21 +29,10 @@ export default function ChatPage() {
   const sendMessageMutation = useSendMessage(chatId ?? '');
   const { data: messages = [], isLoading: historyLoading } = useChatHistory(chatId ?? '', !!chatId);
 
-  const localIndexing = !!(chatId && indexingByChatId[chatId]);
-  const effectiveStatus = useMemo(
-    () =>
-      resolveIndexStatus({
-        backendStatus: repoIndexStatus?.indexStatus,
-        chatStatus: activeChat?.indexStatus,
-        lastIndexedAt: activeChat?.lastIndexedAt,
-        localIndexing,
-      }),
-    [repoIndexStatus?.indexStatus, activeChat?.indexStatus, activeChat?.lastIndexedAt, localIndexing]
-  );
-
-  const isIndexing = effectiveStatus === 'running';
-  const shouldShowIndexingTerminal = !!chatId && indexingRepoId === chatId && effectiveStatus === 'running';
-  const isChatReady = effectiveStatus === 'done';
+  const indexStatus = repoIndexStatus?.indexStatus ?? activeChat?.indexStatus ?? 'idle';
+  const isIndexing = indexStatus === 'running';
+  const shouldShowIndexingTerminal = !!chatId && indexStatus === 'running';
+  const isChatReady = indexStatus === 'done';
   const isInputDisabled = !isChatReady || isIndexing || sendMessageMutation.isPending;
 
   const setMessageForActiveChat = (nextMessage: string) => {
@@ -117,24 +104,6 @@ export default function ChatPage() {
     const nextHeight = Math.min(Math.max(input.scrollHeight, 44), 148);
     input.style.height = `${nextHeight}px`;
   }, [message]);
-
-  useEffect(() => {
-    if (!chatId) {
-      setIndexingRepoId(null);
-      return;
-    }
-
-    if (effectiveStatus === 'running') {
-      if (indexingRepoId !== chatId) {
-        setIndexingRepoId(chatId);
-      }
-      return;
-    }
-
-    if (indexingRepoId === chatId) {
-      setIndexingRepoId(null);
-    }
-  }, [chatId, effectiveStatus, indexingRepoId]);
 
   useEffect(() => {
     const highlightId = searchParams.get('highlight');
@@ -226,7 +195,7 @@ export default function ChatPage() {
                 key={chatId}
                 repoId={chatId ?? ''}
                 repoName={activeChat?.name}
-                status={effectiveStatus}
+                status={indexStatus}
                 errorMessage={repoIndexStatus?.indexError ?? activeChat?.indexError}
               />
             </motion.div>

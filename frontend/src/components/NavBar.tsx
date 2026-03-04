@@ -30,7 +30,6 @@ import {
   useSummarizeRepo,
 } from '../features/repo/repos.hooks';
 import { useClearChat } from '../features/chat/chat.hooks';
-import { resolveIndexStatus } from '../features/repo/repos.api';
 import { useEffect, useState } from 'react';
 import { RepoStructurePanel } from './RepoStructurePanel';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
@@ -40,7 +39,7 @@ export default function Navbar() {
   const { data: user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { activeChatId: activeChat, indexingByChatId, setActiveChatId, setRepoInfoOpen, setRepoInfoTarget, setChatIndexing } = useChatStore();
+  const { activeChatId: activeChat, setActiveChatId, setRepoInfoOpen, setRepoInfoTarget } = useChatStore();
   const { data: repos } = useGetRepos();
   const ingestRepoMutation = useIngestRepo();
   const pinRepoMutation = usePinRepo();
@@ -49,12 +48,8 @@ export default function Navbar() {
   const [showStructurePanel, setShowStructurePanel] = useState(false);
 
   const activeRepo = repos?.find((repo) => repo._id === activeChat) ?? null;
-  const normalizedStatus = resolveIndexStatus({
-    chatStatus: activeRepo?.indexStatus,
-    lastIndexedAt: activeRepo?.lastIndexedAt,
-    localIndexing: !!(activeRepo && indexingByChatId[activeRepo._id]),
-  });
-  const isChatReady = normalizedStatus === 'done';
+  const indexStatus = activeRepo?.indexStatus ?? 'idle';
+  const isChatReady = indexStatus === 'done';
   const clearChatMutation = useClearChat(activeRepo?._id ?? '');
   const {
     mutateAsync: summarizeRepo,
@@ -124,18 +119,14 @@ export default function Navbar() {
 
   const handleIngestRepo = async () => {
     if (!activeRepo || ingestRepoMutation.isPending) return;
-    setChatIndexing(activeRepo._id, true);
     try {
       await ingestRepoMutation.mutateAsync(activeRepo._id);
     } catch {
       // Mutation errors are surfaced through existing query invalidation and status UI.
-    } finally {
-      setChatIndexing(activeRepo._id, false);
     }
   };
 
-  const isIndexing = normalizedStatus === 'running';
-  const hasIndexedOnce = !!activeRepo?.lastIndexedAt || normalizedStatus === 'done';
+  const isIndexing = indexStatus === 'running';
 
   useEffect(() => {
     setShowSummaryPanel(false);
@@ -192,9 +183,9 @@ export default function Navbar() {
                     {activeRepo?.name || 'Repository Chat'}
                   </p>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {normalizedStatus === 'running'
+                    {indexStatus === 'running'
                       ? 'Indexing in progress'
-                      : normalizedStatus === 'failed'
+                      : indexStatus === 'failed'
                         ? 'Index failed'
                         : isChatReady
                           ? 'Ready to chat'
@@ -310,23 +301,23 @@ export default function Navbar() {
       <div className="flex items-center gap-2">
         <Button
           onClick={handleIngestRepo}
-          disabled={isIndexing}
-          variant={hasIndexedOnce ? 'outline' : 'default'}
+          disabled={isIndexing || ingestRepoMutation.isPending}
+          variant={isChatReady ? 'outline' : 'default'}
           size="sm"
-          className={hasIndexedOnce ? 'border-slate-300 dark:border-slate-700' : ''}
+          className={isChatReady ? 'border-slate-300 dark:border-slate-700' : ''}
         >
           {isIndexing ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Indexing...
             </>
-          ) : hasIndexedOnce ? (
+          ) : indexStatus === 'failed' ? (
+            'Retry'
+          ) : isChatReady ? (
             <>
               <RotateCcw className="mr-2 h-4 w-4" />
               Reindex
             </>
-          ) : normalizedStatus === 'failed' ? (
-            'Retry'
           ) : (
             'Index Repository'
           )}
@@ -343,12 +334,12 @@ export default function Navbar() {
                 <Info className="h-4 w-4" />
               </button>
             </TooltipTrigger>
-            {hasIndexedOnce && (
+            {isChatReady && (
               <TooltipContent sideOffset={6} className="max-w-64 bg-slate-900 text-slate-100 dark:bg-slate-100 dark:text-slate-900">
                 Reindex to update embeddings with the latest changes from the repository.
               </TooltipContent>
             )}
-            {!hasIndexedOnce && (
+            {!isChatReady && (
               <TooltipContent sideOffset={6} className="max-w-64 bg-slate-900 text-slate-100 dark:bg-slate-100 dark:text-slate-900">
                 Indexing the repository will extract information and generate embeddings to enable chat functionality. The first indexing may take a few minutes depending on the repository size.
               </TooltipContent>

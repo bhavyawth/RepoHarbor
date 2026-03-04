@@ -1,14 +1,13 @@
-import { AxiosError } from 'axios';
 import { api } from '../../api/client';
 
+export type IndexStatus = 'idle' | 'running' | 'done' | 'failed';
 export interface Repo {
-  indexed?: boolean;
   isPinned: boolean;
   _id: string;
   owner: string;
   name: string;
   userId: string;
-  indexStatus: 'idle' | 'running' | 'done' | 'pending' | 'indexing' | 'indexed' | 'failed';
+  indexStatus: IndexStatus;
   indexError?: string | null;
   defaultBranch?: string | null;
   lastIndexedAt?: string | null;
@@ -40,40 +39,6 @@ export interface RepoIndexStatus {
   indexStatus: Repo['indexStatus'];
   indexError?: string | null;
   lastIndexedAt?: string | null;
-}
-
-export type NormalizedIndexStatus = 'idle' | 'running' | 'done' | 'failed';
-
-export function normalizeIndexStatus(status?: Repo['indexStatus'] | string | null): NormalizedIndexStatus {
-  if (!status) return 'idle';
-  if (status === 'failed') return 'failed';
-  if (status === 'running' || status === 'indexing') return 'running';
-  if (status === 'done' || status === 'indexed') return 'done';
-  return 'idle';
-}
-
-type ResolveIndexStatusInput = {
-  backendStatus?: Repo['indexStatus'] | string | null;
-  chatStatus?: Repo['indexStatus'] | string | null;
-  lastIndexedAt?: string | null;
-  localIndexing?: boolean;
-};
-
-export function resolveIndexStatus({
-  backendStatus,
-  chatStatus,
-  lastIndexedAt,
-  localIndexing = false,
-}: ResolveIndexStatusInput): NormalizedIndexStatus {
-  if (localIndexing) return 'running';
-  const normalizedBackend = normalizeIndexStatus(backendStatus);
-  const normalizedChat = normalizeIndexStatus(chatStatus);
-  const hasIndexedOnce =
-    !!lastIndexedAt || normalizedBackend === 'done' || normalizedChat === 'done';
-  if (normalizedBackend === 'running' || normalizedChat === 'running') return 'running';
-  if (hasIndexedOnce) return 'done';
-  if (normalizedBackend === 'failed' || normalizedChat === 'failed') return 'failed';
-  return 'idle';
 }
 
 export const reposApi = {
@@ -108,25 +73,18 @@ export const reposApi = {
   },
 
   getRepoIndexStatus: async (repoId: string): Promise<RepoIndexStatus> => {
-    try {
-      const { data } = await api.get(`/chats/${repoId}/index-status`);
-      return data;
-    } catch (error) {
-      if ((error as AxiosError).response?.status !== 404) {
-        throw error;
-      }
-      const { data } = await api.get(`/repos/${repoId}/index-status`);
-      return data;
-    }
+    const { data } = await api.get(`/repos/${repoId}/index-status`);
+    return data;
+  },
+
+  getRepoSummary: async (repoId: string): Promise<RepoSummary> => {
+    const { data } = await api.get(`/repos/${repoId}/summary`);
+    return data;
   },
 
   summarizeRepo: async (repoId: string): Promise<RepoSummary> => {
     const { data } = await api.get(`/repos/${repoId}/summary`);
     return data;
-  },
-
-  getRepoSummary: async (repoId: string): Promise<RepoSummary> => {
-    return reposApi.summarizeRepo(repoId);
   },
 
   getRepoStructure: async (repoId: string): Promise<RepoStructure> => {

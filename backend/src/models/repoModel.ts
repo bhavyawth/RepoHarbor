@@ -25,8 +25,8 @@ const RepoSchema = new Schema(
     },
     indexStatus: {
       type: String,
-      enum: ['pending', 'indexing', 'indexed', 'failed'],
-      default: 'pending',
+      enum: ['idle', 'running', 'done', 'failed'],
+      default: 'idle',
       required: true,
     },
     indexError: {

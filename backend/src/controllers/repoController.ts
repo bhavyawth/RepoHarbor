@@ -70,7 +70,7 @@ async function processIndexing(repo: RepoDocument): Promise<void> {
     throw new Error("No chunks were successfully indexed");
   }
   await Repo.findByIdAndUpdate(repo._id, {
-    indexStatus: "indexed",
+    indexStatus: "done",
     lastIndexedAt: new Date(),
     indexError: null,
   });
@@ -102,11 +102,26 @@ export const registerRepo = async (req: Request, res: Response) => {
     return res.status(500).json({message: "Failed to verify repository via GitHub"});
   }
   try {
+    const existingRepo = await Repo.findOne({
+      owner,
+      name,
+      userId: req.user!._id,
+    });
+    if (existingRepo) {
+      return res.json({
+        id: existingRepo._id,
+        owner: existingRepo.owner,
+        name: existingRepo.name,
+        indexStatus: existingRepo.indexStatus,
+        createdAt: existingRepo.createdAt,
+        defaultBranch: existingRepo.defaultBranch,
+      });
+    }
     const repo = await Repo.create({
       owner,
       name,
       userId: req.user!._id,
-      indexStatus: "pending",
+      indexStatus: "idle",
       defaultBranch: repoDetails.default_branch,
     });
     return res.status(201).json({
@@ -170,11 +185,11 @@ export const ingestRepo = async (req: Request, res: Response) => {
       {
         _id: repo._id,
         userId: req.user!._id,
-        indexStatus: { $ne: "indexing" },
+        indexStatus: { $ne: "running" },
       },
       {
         $set: {
-          indexStatus: "indexing",
+          indexStatus: "running",
           indexError: null,
         },
       },
@@ -226,7 +241,7 @@ export const chatWithRepo = async (req: Request, res: Response) => {
     const repo = await Repo.findById(repoId);
     if (!repo) return res.status(404).json({ message: "Repo not found" });
     if (repo.userId.toString() !== req.user!._id.toString()) return res.status(403).json({ message: "Not authorized" });
-    if (repo.indexStatus !== "indexed") return res.status(400).json({ message: "Repo is not indexed yet" });
+    if (repo.indexStatus !== "done") return res.status(400).json({ message: "Repo is not indexed yet" });
     Repo.findByIdAndUpdate(repoId, { $set: { lastAccessedAt: new Date() } }); //to update recent access
     const questionEmbedding = await generateEmbedding(question);
     const chunks = (await Chunk.find({ repoId })).map(c => ({
