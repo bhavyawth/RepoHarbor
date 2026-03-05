@@ -237,7 +237,7 @@ const Folder = forwardRef<
       >
         <AccordionPrimitive.Trigger
           className={cn(
-            `flex items-center gap-1 rounded-md text-sm`,
+            `flex items-center gap-1 rounded-md text-sm transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100`,
             className,
             {
               "bg-muted rounded-md": isSelect && isSelectable,
@@ -306,7 +306,7 @@ const File = forwardRef<
         type="button"
         disabled={!isSelectable}
         className={cn(
-          "flex w-fit items-center gap-1 rounded-md pr-1 text-sm duration-200 ease-in-out rtl:pr-0 rtl:pl-1",
+          "flex w-fit items-center gap-1 rounded-md pr-1 text-sm ease-in-out transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 rtl:pr-0 rtl:pl-1",
           {
             "bg-muted": isSelected && isSelectable,
           },
@@ -361,7 +361,7 @@ const CollapseButton = forwardRef<
   return (
     <Button
       variant={"ghost"}
-      className="absolute right-2 bottom-1 h-8 w-fit p-1"
+      className="absolute right-2 bottom-1 h-8 w-fit p-1 transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100"
       onClick={
         expandedItems && expandedItems.length > 0
           ? closeAll

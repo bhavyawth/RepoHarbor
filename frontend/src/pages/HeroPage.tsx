@@ -179,7 +179,7 @@ export default function Hero() {
                   <button
                     type="submit"
                     disabled={registerRepoMutation.isPending}
-                    className="group/btn shrink-0 px-5 sm:px-7 bg-gradient-to-b from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-semibold text-sm transition-all flex flex-col items-center justify-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed min-w-[80px] sm:min-w-[120px]"
+                    className="group/btn shrink-0 px-5 sm:px-7 bg-gradient-to-b from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-semibold text-sm transition-all transform-gpu  duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 flex flex-col items-center justify-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed min-w-[80px] sm:min-w-[120px]"
                   >
                     {registerRepoMutation.isPending ? (
                       <>
@@ -332,7 +332,7 @@ export default function Hero() {
               </p>
               <button
                 onClick={() => window.location.href = "http://localhost:3000/api/auth/github"}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-white text-purple-600 rounded-lg font-semibold hover:bg-purple-50 transition-all shadow-xl"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-white text-purple-600 rounded-lg font-semibold hover:bg-purple-50 transition-all transform-gpu duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 shadow-xl"
               >
                 <Github className="w-5 h-5" />
                 Get Started with GitHub

@@ -124,7 +124,7 @@ useEffect(() => {
             <Button
               type="submit"
               disabled={isCreating}
-              className="h-12 gap-2 rounded-2xl bg-slate-900 px-5 text-sm font-semibold text-white transition-all duration-200 hover:bg-slate-700 hover:shadow-lg hover:shadow-slate-900/20 active:scale-[0.98] disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 dark:hover:shadow-white/10"
+              className="h-12 gap-2 rounded-2xl bg-slate-900 px-5 text-sm font-semibold text-white transition-all transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 hover:bg-slate-700 hover:shadow-lg hover:shadow-slate-900/20 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 dark:hover:shadow-white/10"
             >
               {isCreating ? (
                 <>

@@ -119,7 +119,7 @@ export default function GlobalChatSearchModal({ open, onClose }: GlobalChatSearc
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-md p-1 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                className="rounded-md p-1 text-slate-500 transition-colors transform-gpu duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -155,7 +155,7 @@ export default function GlobalChatSearchModal({ open, onClose }: GlobalChatSearc
                     <button
                       key={result._id}
                       type="button"
-                      className="w-full rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+                      className="w-full rounded-xl px-3 py-2.5 text-left transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 hover:bg-slate-100 dark:hover:bg-slate-800"
                       onClick={() => {
                         onClose();
                         navigate(`/chat/${result.chatId}?highlight=${result._id}`);

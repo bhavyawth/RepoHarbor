@@ -8,7 +8,6 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
@@ -48,6 +47,7 @@ import { useChatStore } from '../store/chat.store';
 import { useDeleteRepo, useGetRepos, usePinRepo, useRepoSummary } from '../features/repo/repos.hooks';
 import type { Repo } from '../features/repo/repos.api';
 import { useRepoDetails } from '../features/github/github.hooks';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
 type AppSidebarProps = {
   onOpenSearch?: () => void;
@@ -236,58 +236,105 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
                   <CollapsibleContent>
                     <SidebarGroupContent className="pt-1">
                       <SidebarMenu>
-                        {pinnedChats.map((chat) => (
-                          <SidebarMenuItem key={chat._id}>
-                            <SidebarMenuButton
-                              onClick={() => {
-                                setActiveChatId(chat._id);
-                                navigate(`/chat/${chat._id}`);
-                              }}
-                              isActive={activeChatId === chat._id}
-                              className="h-auto items-start rounded-xl border border-transparent px-2.5 py-2.5 transition-colors hover:border-slate-200 hover:bg-slate-100 dark:hover:border-slate-700 dark:hover:bg-slate-800/70 data-[active=true]:border-slate-300 data-[active=true]:bg-slate-100 data-[active=true]:text-slate-900 dark:data-[active=true]:border-slate-700 dark:data-[active=true]:bg-slate-800 dark:data-[active=true]:text-slate-100"
-                            >
-                              {/* <span className='pt-1'><MessageSquare /></span> todo: replace it with something else*/} 
-                              <div className="flex min-w-0 flex-col items-start pl-1">
-                                <span className="truncate text-sm font-medium">
-                                  {chat.name}
-                                </span>
-                                <span className="truncate text-xs text-slate-500 dark:text-slate-400">
-                                  {chat.owner}
-                                </span>
+                        {pinnedChats.map((chat) => {
+                          const branch = chat.branch ?? 'main';
+                          return (
+                            <SidebarMenuItem key={chat._id} className="group/item relative list-none">
+                              {/* The whole row is one block */}
+                              <div
+                                onClick={() => {
+                                  setActiveChatId(chat._id);
+                                  navigate(`/chat/${chat._id}`);
+                                }}
+                                className={`relative w-full cursor-pointer rounded-xl border px-3 py-2.5 transition-all duration-150 overflow-hidden
+                                  ${activeChatId === chat._id
+                                    ? 'border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800'
+                                    : 'border-transparent hover:border-slate-200 hover:bg-slate-100 dark:hover:border-slate-700/60 dark:hover:bg-slate-800/50'
+                                  }`}
+                              >
+                                <div className="flex flex-col gap-1 w-full min-w-0">
+                                  <TooltipProvider delayDuration={400}>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <p className="font-medium text-sm truncate text-slate-800 dark:text-slate-100 leading-tight">
+                                          {chat.name}
+                                        </p>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top">{chat.name}</TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+
+                                  <div className="flex items-center gap-1.5 w-full min-w-0 overflow-hidden">
+                                    <TooltipProvider delayDuration={400}>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">
+                                            {chat.owner}
+                                          </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="bottom">{chat.owner}</TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+
+                                    <TooltipProvider delayDuration={400}>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <span className="shrink-0 inline-flex items-center gap-1 rounded-md bg-slate-100 dark:bg-slate-700/70 border border-slate-200 dark:border-slate-600/50 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 dark:text-slate-400 leading-none max-w-[7rem] overflow-hidden">
+                                            <svg width="8" height="8" viewBox="0 0 16 16" fill="currentColor" className="shrink-0 opacity-60">
+                                              <path d="M11.75 2.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5zm-2.25.75a2.25 2.25 0 1 1 3 2.122V6A2.5 2.5 0 0 1 10 8.5H6a1 1 0 0 0-1 1v1.128a2.251 2.251 0 1 1-1.5 0V5.372a2.25 2.25 0 1 1 1.5 0v1.836A2.493 2.493 0 0 1 6 7h4a1 1 0 0 0 1-1v-.628A2.25 2.25 0 0 1 9.5 3.25zM4.25 12a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5zM4.25 2.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5z"/>
+                                            </svg>
+                                            <span className="truncate">{branch}</span>
+                                          </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="bottom">{branch}</TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  </div>
+                                </div>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger
+                                    asChild
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <div className="absolute inset-y-0 right-0 flex items-center opacity-0 group-hover/item:opacity-100 transition-opacity duration-150">
+                                      <div className="w-12 h-full bg-gradient-to-r from-transparent to-slate-100 dark:to-slate-800 pointer-events-none" />
+                                      <div className="h-full flex items-center pr-2 pl-1 bg-slate-100 dark:bg-slate-800">
+                                        <button
+                                          type="button"
+                                          className="size-8 rounded-md flex items-center justify-center text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                                        >
+                                          <MoreVertical className="size-4" />
+                                          <span className="sr-only">Chat actions</span>
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent
+                                    side="right"
+                                    align="start"
+                                    className="rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+                                  >
+                                    <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => handlePinRepo(chat._id)}>
+                                      <Pin className="size-4" />
+                                      {chat.isPinned ? 'Unpin' : 'Pin'}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => handleRepoInfo(chat)}>
+                                      <Info className="size-4" />
+                                      Repo Info
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      className="cursor-pointer gap-2 text-red-600 dark:text-red-400"
+                                      onClick={() => handleDeleteRepo(chat._id)}
+                                    >
+                                      <Trash2 className="size-4" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
                               </div>
-                            </SidebarMenuButton>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild className='w-8 h-10 mt-0.5'>
-                                <SidebarMenuAction showOnHover className="rounded-lg text-slate-500 hover:bg-slate-200/70 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700/70 dark:hover:text-slate-200">
-                                  <MoreVertical className="size-4 " />
-                                  <span className="sr-only">Chat actions</span>
-                                </SidebarMenuAction>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent side="right" align="start" className="rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
-                                <DropdownMenuItem
-                                  className="cursor-pointer gap-2"
-                                  onClick={() => handlePinRepo(chat._id)}
-                                >
-                                  <Pin className="size-4" />
-                                  {chat.isPinned ? 'Unpin' : 'Pin'}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  className="cursor-pointer gap-2"
-                                  onClick={() => handleRepoInfo(chat)}
-                                >
-                                  <Info className="size-4" />
-                                  Repo Info
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="cursor-pointer gap-2 text-red-600 dark:text-red-400"
-                                  onClick={() => handleDeleteRepo(chat._id)}
-                                >
-                                  <Trash2 className="size-4" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </SidebarMenuItem>
-                        ))}
+                            </SidebarMenuItem>
+                          );
+                        })}
                       </SidebarMenu>
                     </SidebarGroupContent>
                   </CollapsibleContent>
@@ -311,57 +358,106 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
                 <CollapsibleContent>
                   <SidebarGroupContent className="pt-1">
                     <SidebarMenu>
-                      {unpinnedChats.map((chat) => (
-                        <SidebarMenuItem key={chat._id}>
-                          <SidebarMenuButton
-                            onClick={() => {
-                              setActiveChatId(chat._id);
-                              navigate(`/chat/${chat._id}`);
-                            }}
-                            isActive={activeChatId === chat._id}
-                            className="h-auto items-start rounded-xl border border-transparent px-2.5 py-2.5 transition-colors hover:border-slate-200 hover:bg-slate-100 dark:hover:border-slate-700 dark:hover:bg-slate-800/70 data-[active=true]:border-slate-300 data-[active=true]:bg-slate-100 data-[active=true]:text-slate-900 dark:data-[active=true]:border-slate-700 dark:data-[active=true]:bg-slate-800 dark:data-[active=true]:text-slate-100"
-                          >
-                            {/* <span className='pt-1'><MessageSquare /></span> */}
-                            <div className="flex min-w-0 flex-col items-start pl-1">
-                              <span className="truncate text-sm font-medium">
-                                {chat.name}
-                              </span>
-                              <span className="truncate text-xs text-slate-500 dark:text-slate-400">
-                                {chat.owner}
-                              </span>
-                            </div>
-                          </SidebarMenuButton>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild className='w-8 h-10'>
-                              <SidebarMenuAction showOnHover className="rounded-lg text-slate-500 hover:bg-slate-200/70 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700/70 dark:hover:text-slate-200">
-                                <MoreVertical className="size-4" />
-                                <span className="sr-only">Chat actions</span>
-                              </SidebarMenuAction>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent side="right" align="start" className="rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
-                              <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => handlePinRepo(chat._id)}>
-                                <Pin className="size-4" />
-                                {chat.isPinned ? 'Unpin' : 'Pin'}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="cursor-pointer gap-2"
-                                onClick={() => handleRepoInfo(chat)}
+                        {unpinnedChats.map((chat) => {
+                          const branch = chat.branch ?? 'main';
+                          return (
+                            <SidebarMenuItem key={chat._id} className="group/item relative list-none">
+                              {/* The whole row is one block */}
+                              <div
+                                onClick={() => {
+                                  setActiveChatId(chat._id);
+                                  navigate(`/chat/${chat._id}`);
+                                }}
+                                className={`relative w-full cursor-pointer rounded-xl border px-3 py-2.5 transition-all duration-150 overflow-hidden
+                                  ${activeChatId === chat._id
+                                    ? 'border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800'
+                                    : 'border-transparent hover:border-slate-200 hover:bg-slate-100 dark:hover:border-slate-700/60 dark:hover:bg-slate-800/50'
+                                  }`}
                               >
-                                <Info className="size-4" />
-                                Repo Info
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="cursor-pointer gap-2 text-red-600 dark:text-red-400"
-                                onClick={() => handleDeleteRepo(chat._id)}
-                              >
-                                <Trash2 className="size-4" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </SidebarMenuItem>
-                      ))}
-                    </SidebarMenu>
+                                <div className="flex flex-col gap-1 w-full min-w-0">
+                                  <TooltipProvider delayDuration={400}>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <p className="font-medium text-sm truncate text-slate-800 dark:text-slate-100 leading-tight">
+                                          {chat.name}
+                                        </p>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top">{chat.name}</TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+
+                                  <div className="flex items-center gap-1.5 w-full min-w-0 overflow-hidden">
+                                    <TooltipProvider delayDuration={400}>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">
+                                            {chat.owner}
+                                          </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="bottom">{chat.owner}</TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+
+                                    <TooltipProvider delayDuration={400}>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <span className="shrink-0 inline-flex items-center gap-1 rounded-md bg-slate-100 dark:bg-slate-700/70 border border-slate-200 dark:border-slate-600/50 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 dark:text-slate-400 leading-none max-w-[7rem] overflow-hidden">
+                                            <svg width="8" height="8" viewBox="0 0 16 16" fill="currentColor" className="shrink-0 opacity-60">
+                                              <path d="M11.75 2.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5zm-2.25.75a2.25 2.25 0 1 1 3 2.122V6A2.5 2.5 0 0 1 10 8.5H6a1 1 0 0 0-1 1v1.128a2.251 2.251 0 1 1-1.5 0V5.372a2.25 2.25 0 1 1 1.5 0v1.836A2.493 2.493 0 0 1 6 7h4a1 1 0 0 0 1-1v-.628A2.25 2.25 0 0 1 9.5 3.25zM4.25 12a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5zM4.25 2.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5z"/>
+                                            </svg>
+                                            <span className="truncate">{branch}</span>
+                                          </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="bottom">{branch}</TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  </div>
+                                </div>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger
+                                    asChild
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <div className="absolute inset-y-0 right-0 flex items-center opacity-0 group-hover/item:opacity-100 transition-opacity duration-150">
+                                      <div className="w-12 h-full bg-gradient-to-r from-transparent to-slate-100 dark:to-slate-800 pointer-events-none" />
+                                      <div className="h-full flex items-center pr-2 pl-1 bg-slate-100 dark:bg-slate-800">
+                                        <button
+                                          type="button"
+                                          className="size-8 rounded-md flex items-center justify-center text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                                        >
+                                          <MoreVertical className="size-4" />
+                                          <span className="sr-only">Chat actions</span>
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent
+                                    side="right"
+                                    align="start"
+                                    className="rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+                                  >
+                                    <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => handlePinRepo(chat._id)}>
+                                      <Pin className="size-4" />
+                                      {chat.isPinned ? 'Unpin' : 'Pin'}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => handleRepoInfo(chat)}>
+                                      <Info className="size-4" />
+                                      Repo Info
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      className="cursor-pointer gap-2 text-red-600 dark:text-red-400"
+                                      onClick={() => handleDeleteRepo(chat._id)}
+                                    >
+                                      <Trash2 className="size-4" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </SidebarMenuItem>
+                          );
+                        })}
+                      </SidebarMenu>
                   </SidebarGroupContent>
                 </CollapsibleContent>
               </SidebarGroup>
@@ -389,9 +485,6 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
                     <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                       <span className="truncate font-semibold">
                         {user.username}
-                      </span>
-                      <span className="truncate text-xs text-slate-500 dark:text-slate-400">
-                        {user.githubId}
                       </span>
                     </div>
                     <ChevronsUpDown className="ml-auto size-4 group-data-[collapsible=icon]:hidden" />

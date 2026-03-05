@@ -149,17 +149,17 @@ export default function Navbar() {
             <Button
               variant="ghost"
               onClick={handleFeatureScroll}
-              className="rounded-full px-5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100/80 dark:text-slate-200 dark:hover:bg-slate-800/80"
+              className="transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 rounded-full px-5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100/80 dark:text-slate-200 dark:hover:bg-slate-800/80"
             >
               Features
             </Button>
             <Button
               onClick={handleGithubLogin}
-              className="rounded-full bg-slate-900 px-5 py-2 text-sm font-medium text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+              className="rounded-full bg-slate-900 px-5 py-2 text-sm font-medium text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100"
             >
               Get Started
             </Button>
-            <AnimatedThemeToggler />
+            <AnimatedThemeToggler className="inline-flex items-center justify-center transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100" />
           </div>
         </div>
       </nav>
@@ -173,7 +173,7 @@ export default function Navbar() {
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="flex items-center gap-2 text-sm font-medium"
+              className="flex items-center gap-2 text-sm font-medium transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100"
               disabled={!activeRepo}
             >
               <div className="flex items-center gap-3">
@@ -198,7 +198,7 @@ export default function Navbar() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="center" className="w-56">
             <DropdownMenuItem
-              className="cursor-pointer gap-2"
+              className="cursor-pointer gap-2 transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100"
               onClick={handleRepoInfo}
               disabled={!activeRepo}
             >
@@ -206,7 +206,7 @@ export default function Navbar() {
               Repo Info
             </DropdownMenuItem>
             <DropdownMenuItem
-              className="cursor-pointer gap-2"
+              className="cursor-pointer gap-2 transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100"
               onClick={handlePinRepo}
               disabled={!activeRepo}
             >
@@ -214,7 +214,7 @@ export default function Navbar() {
               {activeRepo?.isPinned ? 'Unpin Repo' : 'Pin Repo'}
             </DropdownMenuItem>
             <DropdownMenuItem
-              className="cursor-pointer gap-2"
+              className="cursor-pointer gap-2 transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100"
               onClick={handleRepoSummary}
               disabled={!activeRepo || repoSummaryLoading}
             >
@@ -226,7 +226,7 @@ export default function Navbar() {
               {repoSummaryLoading ? 'Summarizing...' : 'Summarize Repo'}
             </DropdownMenuItem>
             <DropdownMenuItem
-              className="cursor-pointer gap-2"
+              className="cursor-pointer gap-2 transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100"
               onClick={handleRepoStructure}
               disabled={!activeRepo}
             >
@@ -234,7 +234,7 @@ export default function Navbar() {
               Repo File Structure
             </DropdownMenuItem>
             <DropdownMenuItem
-              className="cursor-pointer gap-2"
+              className="cursor-pointer gap-2 transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100"
               onClick={handleClearChat}
               disabled={!activeRepo}
             >
@@ -242,7 +242,7 @@ export default function Navbar() {
               Clear Chat
             </DropdownMenuItem>
             <DropdownMenuItem
-              className="cursor-pointer gap-2 text-red-600 dark:text-red-400"
+              className="cursor-pointer gap-2 text-red-600 dark:text-red-400 transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100"
               onClick={handleDeleteRepo}
               disabled={!activeRepo}
             >
@@ -260,7 +260,7 @@ export default function Navbar() {
               </div>
               <Button
                 variant="ghost"
-                className="h-7 px-2 text-xs"
+                className="h-7 px-2 text-xs transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100"
                 onClick={() => setShowSummaryPanel(false)}
               >
                 Close
@@ -304,7 +304,10 @@ export default function Navbar() {
           disabled={isIndexing || ingestRepoMutation.isPending}
           variant={isChatReady ? 'outline' : 'default'}
           size="sm"
-          className={isChatReady ? 'border-slate-300 dark:border-slate-700' : ''}
+          className={`flex items-center justify-center leading-none transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 ${isChatReady
+              ? 'border-slate-300 dark:border-slate-700'
+              : ''
+            }`}
         >
           {isIndexing ? (
             <>
@@ -329,7 +332,7 @@ export default function Navbar() {
               <button
                 type="button"
                 aria-label="index info"
-                className="inline-flex h-7 w-7 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-full text-slate-500 transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
               >
                 <Info className="h-4 w-4" />
               </button>
@@ -346,6 +349,13 @@ export default function Navbar() {
             )}
           </Tooltip>
         </TooltipProvider>
+      </div>
+      <div className="flex items-center">
+        {activeRepo && (
+          <span className="inline-flex items-center rounded-md bg-slate-200 px-2 py-1 text-xs text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+            Branch: {activeRepo.branch ?? 'main'}
+          </span>
+        )}
       </div>
     </nav>
   );

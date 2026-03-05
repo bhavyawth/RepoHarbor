@@ -46,7 +46,11 @@ export function RepoStructurePanel({
           <FolderTree className="h-4 w-4 text-purple-600 dark:text-purple-400" />
           {repoName} Structure
         </div>
-        <Button variant="ghost" className="h-7 px-2 text-xs" onClick={onClose}>
+        <Button
+          variant="ghost"
+          className="h-7 px-2 text-xs transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100"
+          onClick={onClose}
+        >
           Close
         </Button>
       </div>

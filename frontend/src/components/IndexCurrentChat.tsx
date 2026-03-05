@@ -15,7 +15,7 @@ export default function IndexCurrentChat({ onIndex, isLoading = false }: Props) 
           Index this repository to start chatting.
         </p>
         <Button
-          className="mt-6 w-full bg-linear-to-r from-purple-600 to-blue-600 text-white hover:from-purple-500 hover:to-blue-500"
+          className="mt-6 w-full transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 bg-linear-to-r from-purple-600 to-blue-600 text-white hover:from-purple-500 hover:to-blue-500"
           onClick={onIndex}
           disabled={isLoading}
         >
@@ -32,4 +32,3 @@ export default function IndexCurrentChat({ onIndex, isLoading = false }: Props) 
     </div>
   );
 }
-

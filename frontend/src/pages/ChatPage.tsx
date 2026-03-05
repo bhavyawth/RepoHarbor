@@ -156,7 +156,7 @@ export default function ChatPage() {
               type="submit"
               disabled={isInputDisabled || !message.trim()}
               size="icon"
-              className="h-10 w-10 shrink-0 my-auto rounded-full bg-slate-900 text-white transition-transform hover:scale-105 active:scale-95 disabled:scale-100 disabled:bg-slate-300 disabled:text-slate-500 dark:bg-white dark:text-slate-900 dark:disabled:bg-slate-800 dark:disabled:text-slate-600"
+              className="h-10 w-10 shrink-0 my-auto rounded-full bg-slate-900 text-white transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 disabled:bg-slate-300 disabled:text-slate-500 dark:bg-white dark:text-slate-900 dark:disabled:bg-slate-800 dark:disabled:text-slate-600"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

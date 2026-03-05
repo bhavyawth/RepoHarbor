@@ -43,7 +43,7 @@ export default function CodeBlock({ code, language }: CodeBlockProps) {
           onClick={handleCopy}
           size="sm"
           variant="ghost"
-          className="h-7 gap-1.5 rounded-md px-2 text-xs text-slate-600 hover:bg-slate-200 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
+          className="h-7 gap-1.5 rounded-md px-2 text-xs transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
         >
           {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
           {copied ? 'Copied' : 'Copy'}
