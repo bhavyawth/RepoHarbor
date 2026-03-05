@@ -95,7 +95,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
-  }, [messages, sendMessageMutation.isPending]);
+  }, [chatId, historyLoading]);
 
   useEffect(() => {
     const input = inputRef.current;

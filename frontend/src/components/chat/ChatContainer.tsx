@@ -2,6 +2,7 @@ import type React from 'react';
 import { Brain, Loader2 } from 'lucide-react';
 import type { ChatMessage } from '../../features/chat/chat.api';
 import MessageRenderer from './MessageRenderer';
+import { useEffect } from 'react';
 
 type ChatContainerProps = {
   messages: ChatMessage[];
@@ -22,6 +23,12 @@ export default function ChatContainer({
   highlightedMessageId,
   messagesEndRef,
 }: ChatContainerProps) {
+  // add scroll to bottom when user send msg, not when assistant replies
+  useEffect(() => {
+    if (messagesEndRef.current && messages[messages.length - 1]?.role === 'user') {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isThinking, sendError]);
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-7 sm:px-6">
       {historyLoading && (
