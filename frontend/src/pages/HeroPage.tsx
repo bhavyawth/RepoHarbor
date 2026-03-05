@@ -1,13 +1,13 @@
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { Github, ArrowRight, Zap, Brain, Lock, Code2, MessageSquare, Search } from 'lucide-react';
+import { Github, ArrowRight, Zap, Brain, Lock, Code2, MessageSquare, Search, Loader2 } from 'lucide-react';
 import FloatingBlob from '../components/FloatingBlob';
 import { TypingAnimation } from '../components/ui/typing-animation';
 import HeroVisual from '../components/HeroVisual';
 import { useNavigate } from 'react-router-dom';
 import { useChatStore } from '../store/chat.store';
 import { useRegisterRepo } from '../features/repo/repos.hooks';
-import { useState, type FormEvent } from 'react';
+import { useState, useRef, type FormEvent, useEffect } from 'react';
 import { normalizeRepoInput } from '../lib/repo-input';
 
 const features = [
@@ -35,10 +35,12 @@ const features = [
 
 export default function Hero() {
   const [repoUrl, setRepoUrl] = useState('');
+  const [repoBranch, setRepoBranch] = useState('');
   const navigate = useNavigate();
   const [error, setError] = useState('');
   const { addChat, setActiveChatId } = useChatStore();
   const registerRepoMutation = useRegisterRepo();
+  const topRef = useRef<HTMLDivElement>(null);
 
   const handleCreateChat = async (e: FormEvent) => {
     e.preventDefault();
@@ -52,7 +54,10 @@ export default function Hero() {
       await axios.get("http://localhost:3000/api/auth/me", {
         withCredentials: true,
       });
-      const chat = await registerRepoMutation.mutateAsync({ repoUrl: normalizedRepoUrl });
+      const chat = await registerRepoMutation.mutateAsync({
+        repoUrl: normalizedRepoUrl,
+        branch: repoBranch.trim() || "main",
+      });
       addChat(chat);
       setActiveChatId(chat._id);
       navigate(`/chat/${chat._id}`);
@@ -60,6 +65,7 @@ export default function Hero() {
       const status = (err as { response?: { status?: number } })?.response?.status;
       if (status === 401) {
         localStorage.setItem("pendingRepoUrl", normalizedRepoUrl);
+        localStorage.setItem("pendingRepoBranch", repoBranch.trim() || "main");
         window.location.href = "http://localhost:3000/api/auth/github";
         return;
       }
@@ -71,15 +77,19 @@ export default function Hero() {
     }
   };
 
+  useEffect(() => {
+    topRef.current?.scrollIntoView({ behavior: 'instant' });
+  }, []);
 
   return (
     <div className="relative min-h-screen bg-white dark:bg-black">
+      <div ref={topRef} />
       <FloatingBlob />
       {/* Subtle background gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-purple-50/50 via-transparent to-blue-50/30 dark:from-purple-950/10 dark:via-transparent dark:to-blue-950/10" />
-      
+
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#8882_1px,transparent_1px),linear-gradient(to_bottom,#8882_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
-      
+
       {/* Hero Section */}
       <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 pt-32 pb-24">
         <div className="text-center max-w-4xl mx-auto">
@@ -94,65 +104,100 @@ export default function Hero() {
             </div>
 
             <h1 className="text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight mb-6">
-                Chat with your{' '}
-                <span className="bg-linear-to-r min-w-[22ch] from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent inline-block">
-                  <TypingAnimation
-                    words={[
-                      "GitHub repositories",
-                      "Source code",
-                      "Private projects",
-                      "Codebase"
-                    ]}
-                    showCursor={true}
-                    blinkCursor={true}
-                    cursorStyle={'line'}
-                    pauseDelay={2000}
-                    loop
-                    startOnView={false}
-                    className="bg-linear-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent"
-                  />
-                </span>
-                <p>{' '}using AI.</p>
-              </h1>
+              Chat with your{' '}
+              <span className="bg-linear-to-r min-w-[22ch] from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent inline-block">
+                <TypingAnimation
+                  words={[
+                    "GitHub repositories",
+                    "Source code",
+                    "Private projects",
+                    "Codebase"
+                  ]}
+                  showCursor={true}
+                  blinkCursor={true}
+                  cursorStyle={'line'}
+                  pauseDelay={2000}
+                  loop
+                  startOnView={false}
+                  className="bg-linear-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent"
+                />
+              </span>
+              <p>{' '}using AI.</p>
+            </h1>
 
             <p className="text-xl text-slate-600 dark:text-slate-400 mb-12 max-w-2xl mx-auto leading-relaxed">
               Paste a GitHub URL. Ask questions. Get instant answers from your codebase with advanced RAG technology.
             </p>
 
             {/* GitHub URL Input */}
-            <form onSubmit={handleCreateChat} className="max-w-2xl mx-auto mb-6">
-              <div className="relative group">
-                <div className="flex gap-3 p-2 bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-slate-200 dark:border-slate-800">
-                  <div className="flex items-center gap-3 flex-1 px-4">
-                    <Github className="w-5 h-5 text-slate-400 shrink-0" />
-                    <input
-                      type="text"
-                      value={repoUrl}
-                      onChange={(e) => {
-                        setRepoUrl(e.target.value);
-                        if (error) setError('');
-                      }}
-                      placeholder="https://github.com/owner/repository"
-                      className="flex-1 bg-transparent border-none outline-none text-slate-900 dark:text-white placeholder:text-slate-400 text-base"
-                    />
+            <form onSubmit={handleCreateChat} className="w-full max-w-3xl mx-auto mb-6 px-4 sm:px-0">
+              <div className="relative">
+                <div className="flex items-stretch bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+
+                  {/* Left side — stacked inputs */}
+                  <div className="flex-1 min-w-0">
+                    {/* URL row */}
+                    <div className="flex items-center gap-3 px-4 py-3">
+                      <Github className="w-4 h-4 text-slate-400 shrink-0" />
+                      <input
+                        type="text"
+                        value={repoUrl}
+                        onChange={(e) => {
+                          setRepoUrl(e.target.value);
+                          if (error) setError('');
+                        }}
+                        placeholder="https://github.com/owner/repository"
+                        className="flex-1 min-w-0 bg-transparent border-none outline-none text-slate-900 dark:text-white placeholder:text-slate-400 text-sm sm:text-base"
+                      />
+                    </div>
+
+                    {/* Divider */}
+                    <div className="mx-4 border-t border-slate-100 dark:border-slate-800" />
+
+                    {/* Branch row */}
+                    <div className="flex items-center gap-3 px-4 py-3">
+                      <svg className="w-4 h-4 text-slate-400 shrink-0" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M11.75 2.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5zm-2.25.75a2.25 2.25 0 1 1 3 2.122V6A2.5 2.5 0 0 1 10 8.5H6a1 1 0 0 0-1 1v1.128a2.251 2.251 0 1 1-1.5 0V5.372a2.25 2.25 0 1 1 1.5 0v1.836A2.493 2.493 0 0 1 6 7h4a1 1 0 0 0 1-1v-.628A2.25 2.25 0 0 1 9.5 3.25z" />
+                      </svg>
+                      <input
+                        type="text"
+                        value={repoBranch}
+                        onChange={(e) => {
+                          setRepoBranch(e.target.value);
+                          if (error) setError('');
+                        }}
+                        placeholder="Branch — defaults to main"
+                        className="flex-1 min-w-0 bg-transparent border-none outline-none text-slate-900 dark:text-white placeholder:text-slate-400 text-sm"
+                      />
+                    </div>
                   </div>
+
+                  {/* Vertical divider */}
+                  <div className="w-px bg-slate-100 dark:bg-slate-800 my-3" />
+
+                  {/* Right side — full height button */}
                   <button
                     type="submit"
                     disabled={registerRepoMutation.isPending}
-                    className="group/btn px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded-lg font-semibold transition-all flex items-center gap-2 shrink-0"
+                    className="group/btn shrink-0 px-5 sm:px-7 bg-gradient-to-b from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-semibold text-sm transition-all flex flex-col items-center justify-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed min-w-[80px] sm:min-w-[120px]"
                   >
                     {registerRepoMutation.isPending ? (
-                      'Creating...'
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span className="hidden sm:inline text-xs">Creating…</span>
+                      </>
                     ) : (
                       <>
-                        Start Chatting
-                        <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                        <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-0.5 transition-transform" />
+                        <span className="hidden sm:inline text-xs">Start Chatting</span>
                       </>
                     )}
                   </button>
                 </div>
+
+                {/* Error */}
                 {error && (
-                  <div className="mt-3 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+                  <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
                     {error}
                   </div>
                 )}
@@ -181,7 +226,7 @@ export default function Hero() {
         >
           <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl bg-white dark:bg-slate-900">
             <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-blue-500/5" />
-            
+
             {/* Browser chrome */}
             <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
               <div className="flex gap-2">
@@ -224,7 +269,7 @@ export default function Hero() {
 
       {/* Features Section */}
       <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 py-24 border-t border-slate-200 dark:border-slate-800 scroll-mt-24"
-      id='features'>
+        id='features'>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}

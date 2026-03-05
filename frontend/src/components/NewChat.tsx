@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Github, Loader2, Plus } from 'lucide-react';
+import { ArrowRight, Loader2, Plus } from 'lucide-react';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { useRegisterRepo } from '../features/repo/repos.hooks';
@@ -11,6 +11,7 @@ import { normalizeRepoInput } from '../lib/repo-input';
 export default function NewChat() {
   const navigate = useNavigate();
   const [repoUrl, setRepoUrl] = useState('');
+  const [repoBranch, setRepoBranch] = useState('');
   const [error, setError] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const { addChat, setActiveChatId } = useChatStore();
@@ -31,7 +32,7 @@ export default function NewChat() {
     return phrases[Math.floor(Math.random() * phrases.length)];
   }, []);
 
-const processRegistration = async (url: string) => {
+const processRegistration = async (url: string, branch: string = "main") => {
   const { repoUrl: normalized, error: valError } = normalizeRepoInput(url);
   if (valError || !normalized) {
     setError(valError ?? 'Enter a valid GitHub URL.');
@@ -41,7 +42,10 @@ const processRegistration = async (url: string) => {
   setError('');
   setIsCreating(true);
   try {
-    const chat = await registerRepoMutation.mutateAsync({ repoUrl: normalized });
+    const chat = await registerRepoMutation.mutateAsync({
+      repoUrl: normalized,
+      branch: branch.trim() || "main",
+    });
     addChat(chat);
     setActiveChatId(chat._id);
     navigate(`/chat/${chat._id}`);
@@ -55,14 +59,16 @@ const processRegistration = async (url: string) => {
 const handleCreateChat = (e: FormEvent) => {
   e.preventDefault();
   const trimmedInput = repoUrl.trim();
-  processRegistration(trimmedInput);
+  processRegistration(trimmedInput, repoBranch);
 };
 
 useEffect(() => {
   const pendingUrl = localStorage.getItem('pendingRepoUrl');
+  const pendingBranch = localStorage.getItem('pendingRepoBranch') ?? 'main';
   if (pendingUrl) {
     localStorage.removeItem('pendingRepoUrl');
-    processRegistration(pendingUrl);
+    localStorage.removeItem('pendingRepoBranch');
+    processRegistration(pendingUrl, pendingBranch);
   }
 }, []);
 
@@ -86,12 +92,9 @@ useEffect(() => {
             <h2 className="text-lg font-mono text-slate-900 dark:text-slate-100">Use any public GitHub repository URL.</h2>
           </div>
 
-          <label htmlFor="repo-url" className="mb-2 block text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Repository URL
-          </label>
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex gap-2.5">
+            {/* URL input */}
             <div className="relative flex-1">
-              <Github className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
                 id="repo-url"
                 value={repoUrl}
@@ -101,24 +104,38 @@ useEffect(() => {
                 }}
                 placeholder="https://github.com/owner/repository"
                 disabled={isCreating}
-                className="h-11 rounded-xl border-slate-300 bg-white pl-9 text-sm shadow-none focus-visible:border-slate-400 focus-visible:ring-2 focus-visible:ring-slate-300/60 dark:border-slate-700 dark:bg-slate-900 dark:focus-visible:border-slate-500 dark:focus-visible:ring-slate-700/70"
+                className="h-12 rounded-2xl border border-slate-200 bg-slate-50 pl-4 pr-4 text-sm text-slate-800 placeholder:text-slate-300 shadow-none transition-all duration-200 focus-visible:border-slate-400 focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-slate-100 disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus-visible:border-slate-600 dark:focus-visible:bg-slate-800 dark:focus-visible:ring-slate-800/60"
               />
             </div>
+
+            {/* Branch input — fixed width */}
+            <Input
+              id="repo-branch"
+              value={repoBranch}
+              onChange={(e) => {
+                setRepoBranch(e.target.value);
+                if (error) setError('');
+              }}
+              placeholder="branch "
+              disabled={isCreating}
+              className="h-12 w-28 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-800 placeholder:text-slate-300 shadow-none transition-all duration-200 focus-visible:border-slate-400 focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-slate-100 disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus-visible:border-slate-600 dark:focus-visible:bg-slate-800 dark:focus-visible:ring-slate-800/60"
+            />
+            {/* Submit button */}
             <Button
               type="submit"
-              className="h-11 rounded-xl bg-slate-900 px-5 text-sm font-medium text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
               disabled={isCreating}
+              className="h-12 gap-2 rounded-2xl bg-slate-900 px-5 text-sm font-semibold text-white transition-all duration-200 hover:bg-slate-700 hover:shadow-lg hover:shadow-slate-900/20 active:scale-[0.98] disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 dark:hover:shadow-white/10"
             >
               {isCreating ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Creating
+                  <span>Creating…</span>
                 </>
               ) : (
                 <>
                   <Plus className="h-4 w-4" />
-                  Create Chat
-                  <ArrowRight className="h-4 w-4 opacity-80" />
+                  <span>Create Chat</span>
+                  <ArrowRight className="h-3.5 w-3.5 opacity-60" />
                 </>
               )}
             </Button>
@@ -131,7 +148,7 @@ useEffect(() => {
           )}
 
           <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-            Example: <span className="font-mono text-slate-700 dark:text-slate-300">https://github.com/vercel/next.js</span>
+            Example: <span className="font-mono text-slate-700 dark:text-slate-300">https://github.com/vercel/next.js | main</span>
           </p>
         </form>
       </div>

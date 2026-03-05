@@ -6,6 +6,7 @@ export interface Repo {
   _id: string;
   owner: string;
   name: string;
+  branch?: string | null;
   userId: string;
   indexStatus: IndexStatus;
   indexError?: string | null;
@@ -18,6 +19,7 @@ export interface Repo {
 
 export interface RegisterRepoRequest {
   repoUrl: string;
+  branch?: string;
 }
 
 export interface RepoSummary {
@@ -43,7 +45,11 @@ export interface RepoIndexStatus {
 
 export const reposApi = {
   registerRepo: async (data: RegisterRepoRequest): Promise<Repo> => {
-    const { data: repo } = await api.post('/repos', data);
+    const payload = {
+      ...data,
+      branch: data.branch?.trim() || "main",
+    };
+    const { data: repo } = await api.post('/repos', payload);
     const normalizedId = repo._id ?? repo.id;
     return {
       ...repo,

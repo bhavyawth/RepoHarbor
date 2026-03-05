@@ -23,7 +23,7 @@ async function processIndexing(repo: RepoDocument): Promise<void> {
   const treeEntries = await getRepoTree(
     repo.owner, 
     repo.name, 
-    repo.defaultBranch ?? undefined
+    repo.branch ?? undefined
   );
   const filePaths = treeEntries
     .filter((entry) => entry.type === "blob")
@@ -44,7 +44,7 @@ async function processIndexing(repo: RepoDocument): Promise<void> {
           repo.owner, 
           repo.name, 
           filePath, 
-          repo.defaultBranch ?? undefined
+          repo.branch ?? undefined
         );
         const chunks = chunkText(content, repoName, filePath);
         batchChunks.push(...chunks);
@@ -82,8 +82,9 @@ async function processIndexing(repo: RepoDocument): Promise<void> {
 // POST /repos — Register a repo
 // ============================================================
 export const registerRepo = async (req: Request, res: Response) => {
-  const { repoUrl } = req.body;
+  const { repoUrl, branch } = req.body;
   if (!repoUrl || typeof repoUrl !== "string") return res.status(400).json({ message: "repoUrl is required" });
+  const normalizedBranch = typeof branch === "string" && branch.trim().length > 0 ? branch.trim() : "main";
   let input = repoUrl.trim();
   if (!input.startsWith("http")) input = `https://github.com/${input}`;
   const parsed = parseGitHubUrl(input);
@@ -105,6 +106,7 @@ export const registerRepo = async (req: Request, res: Response) => {
     const existingRepo = await Repo.findOne({
       owner,
       name,
+      branch: normalizedBranch,
       userId: req.user!._id,
     });
     if (existingRepo) {
@@ -114,7 +116,7 @@ export const registerRepo = async (req: Request, res: Response) => {
         name: existingRepo.name,
         indexStatus: existingRepo.indexStatus,
         createdAt: existingRepo.createdAt,
-        defaultBranch: existingRepo.defaultBranch,
+        branch: existingRepo.branch,
       });
     }
     const repo = await Repo.create({
@@ -122,7 +124,7 @@ export const registerRepo = async (req: Request, res: Response) => {
       name,
       userId: req.user!._id,
       indexStatus: "idle",
-      defaultBranch: repoDetails.default_branch,
+      branch: normalizedBranch,
     });
     return res.status(201).json({
       id: repo._id,
@@ -130,12 +132,9 @@ export const registerRepo = async (req: Request, res: Response) => {
       name: repo.name,
       indexStatus: repo.indexStatus,
       createdAt: repo.createdAt,
-      defaultBranch: repo.defaultBranch,
+      branch: repo.branch,
     });
   } catch (error: any) {
-    if (error.code === 11000) {
-      return res.status(409).json({message: `Repository ${owner}/${name} is already registered`});
-    }
     return res.status(500).json({message: "Failed to register repository"});
   }
 };
@@ -284,7 +283,7 @@ export const getRepoStructure = async (req: Request, res: Response) => {
       return res.status(200).json({ tree: repo.repoTree, structure: treeToPrompt(repo.repoTree) });
     }
 
-    const treeEntries = await getRepoTree(repo.owner, repo.name, repo.defaultBranch ?? undefined);
+    const treeEntries = await getRepoTree(repo.owner, repo.name, repo.branch ?? undefined);
     const filePaths = treeEntries
       .filter((entry) => entry.type === "blob")
       .filter((entry) => !shouldSkipPath(entry.path))

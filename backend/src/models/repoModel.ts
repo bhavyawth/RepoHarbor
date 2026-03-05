@@ -33,9 +33,9 @@ const RepoSchema = new Schema(
       type: String,
       default: null,
     },
-    defaultBranch: {
+    branch: {
       type: String,
-      default: null,
+      default: "main",
     },
     lastIndexedAt: {
       type: Date,
@@ -49,7 +49,7 @@ const RepoSchema = new Schema(
   { timestamps: true }
 );
 
-RepoSchema.index({ owner: 1, name: 1, userId: 1 }, { unique: true });
+RepoSchema.index({ owner: 1, name: 1, branch: 1, userId: 1 }, { unique: true });
 RepoSchema.index({ owner: 1, name: 1 });
 
 export type RepoDocType = InferSchemaType<typeof RepoSchema>;
