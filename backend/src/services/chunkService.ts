@@ -8,6 +8,7 @@ export interface TextChunk {
 
 export function chunkText(text: string, repo: string, filepath: string, chunkSize=2000, overlap=200) : TextChunk[] {
   const chunks: TextChunk[] = []; //the array to hold all the chunks formed
+  if (typeof text !== "string") text = JSON.stringify(text, null, 2);
   const textLength = text.length;
   let position = 0, chunkIndex = 0; 
   if  (chunkSize < 0) {
