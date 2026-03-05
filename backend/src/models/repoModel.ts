@@ -35,7 +35,6 @@ const RepoSchema = new Schema(
     },
     branch: {
       type: String,
-      default: "main",
     },
     lastIndexedAt: {
       type: Date,

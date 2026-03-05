@@ -32,49 +32,49 @@ export default function NewChat() {
     return phrases[Math.floor(Math.random() * phrases.length)];
   }, []);
 
-const processRegistration = async (url: string, branch: string = "main") => {
-  const { repoUrl: normalized, error: valError } = normalizeRepoInput(url);
-  if (valError || !normalized) {
-    setError(valError ?? 'Enter a valid GitHub URL.');
-    setRepoUrl(url); 
-    return;
-  }
-  setError('');
-  setIsCreating(true);
-  try {
-    const chat = await registerRepoMutation.mutateAsync({
-      repoUrl: normalized,
-      branch: branch.trim() || "main",
-    });
-    addChat(chat);
-    setActiveChatId(chat._id);
-    navigate(`/chat/${chat._id}`);
-  } catch (err) {
-    setError(err instanceof Error ? err.message : 'Failed to create chat.');
-  } finally {
-    setIsCreating(false);
-  }
-};
+  const processRegistration = async (url: string, branch: string) => {
+    const { repoUrl: normalized, error: valError } = normalizeRepoInput(url);
+    if (valError || !normalized) {
+      setError(valError ?? 'Enter a valid GitHub URL.');
+      setRepoUrl(url);
+      return;
+    }
+    setError('');
+    setIsCreating(true);
+    try {
+      const chat = await registerRepoMutation.mutateAsync({
+        repoUrl: normalized,
+        branch: branch.trim(),
+      });
+      addChat(chat);
+      setActiveChatId(chat._id);
+      navigate(`/chat/${chat._id}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create chat.');
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
-const handleCreateChat = (e: FormEvent) => {
-  e.preventDefault();
-  const trimmedInput = repoUrl.trim();
-  processRegistration(trimmedInput, repoBranch);
-};
+  const handleCreateChat = (e: FormEvent) => {
+    e.preventDefault();
+    const trimmedInput = repoUrl.trim();
+    processRegistration(trimmedInput, repoBranch);
+  };
 
-useEffect(() => {
-  const pendingUrl = localStorage.getItem('pendingRepoUrl');
-  const pendingBranch = localStorage.getItem('pendingRepoBranch') ?? 'main';
-  if (pendingUrl) {
-    localStorage.removeItem('pendingRepoUrl');
-    localStorage.removeItem('pendingRepoBranch');
-    processRegistration(pendingUrl, pendingBranch);
-  }
-}, []);
+  useEffect(() => {
+    const pendingUrl = localStorage.getItem('pendingRepoUrl');
+    const pendingBranch = localStorage.getItem('pendingRepoBranch');
+    if (pendingUrl) {
+      localStorage.removeItem('pendingRepoUrl');
+      localStorage.removeItem('pendingRepoBranch');
+      processRegistration(pendingUrl, pendingBranch ?? '');
+    }
+  }, []);
 
   return (
     <section className="relative isolate mx-auto flex h-full w-full items-center justify-center px-6 py-10 sm:px-8 lg:px-10">
-      <FloatingBlob numberOfBlobs={4}/>
+      <FloatingBlob numberOfBlobs={4} />
       <div className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(to_right,rgba(100,116,139,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(100,116,139,0.08)_1px,transparent_1px)] bg-[size:56px_56px] [mask-image:radial-gradient(ellipse_75%_55%_at_50%_35%,#000_55%,transparent_100%)] dark:bg-[linear-gradient(to_right,rgba(148,163,184,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.12)_1px,transparent_1px)]" />
 
       <div className="relative z-10 w-full max-w-6xl">
@@ -124,7 +124,7 @@ useEffect(() => {
             <Button
               type="submit"
               disabled={isCreating}
-              className="h-12 gap-2 rounded-2xl bg-slate-900 px-5 text-sm font-semibold text-white transition-all transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 hover:bg-slate-700 hover:shadow-lg hover:shadow-slate-900/20 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 dark:hover:shadow-white/10"
+              className="h-12 gap-2 rounded-2xl bg-slate-900 px-5 text-sm font-semibold text-white transition-all transform-gpu duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 hover:bg-slate-700 hover:shadow-lg hover:shadow-slate-900/20 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 dark:hover:shadow-white/10"
             >
               {isCreating ? (
                 <>

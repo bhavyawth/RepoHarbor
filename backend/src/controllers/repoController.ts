@@ -84,15 +84,14 @@ async function processIndexing(repo: RepoDocument): Promise<void> {
 export const registerRepo = async (req: Request, res: Response) => {
   const { repoUrl, branch } = req.body;
   if (!repoUrl || typeof repoUrl !== "string") return res.status(400).json({ message: "repoUrl is required" });
-  const normalizedBranch = typeof branch === "string" && branch.trim().length > 0 ? branch.trim() : "main";
   let input = repoUrl.trim();
   if (!input.startsWith("http")) input = `https://github.com/${input}`;
   const parsed = parseGitHubUrl(input);
   if (!parsed) return res.status(400).json({ message: "Invalid GitHub input. Provide either https://github.com/owner/name or owner/name" });
   const { owner, name } = parsed;
-  let repoDetails;
+  let normalizedBranch: string;
   try {
-    repoDetails = await getRepoDetails(owner, name);
+    normalizedBranch = typeof branch === "string" && branch.trim().length > 0 ? branch.trim() : (await getRepoDetails(owner, name)).default_branch;
   } catch (error: any) {
     if (error.response?.status === 404) {
       return res.status(400).json({message: "Repository does not exist or is not publicly accessible"});

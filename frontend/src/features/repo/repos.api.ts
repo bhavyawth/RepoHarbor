@@ -47,7 +47,7 @@ export const reposApi = {
   registerRepo: async (data: RegisterRepoRequest): Promise<Repo> => {
     const payload = {
       ...data,
-      branch: data.branch?.trim() || "main",
+      branch: data.branch?.trim(),
     };
     const { data: repo } = await api.post('/repos', payload);
     const normalizedId = repo._id ?? repo.id;
