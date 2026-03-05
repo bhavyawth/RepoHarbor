@@ -216,7 +216,6 @@ export const ingestRepo = async (req: Request, res: Response) => {
     });
   }
 };
-
 // ============================================================
 // POST /repos/:repoId/chat — Chat with a repository
 // ============================================================
@@ -244,18 +243,8 @@ export const chatWithRepo = async (req: Request, res: Response) => {
     if (repo.indexStatus !== "done") return res.status(400).json({ message: "Repo is not indexed yet" });
     Repo.findByIdAndUpdate(repoId, { $set: { lastAccessedAt: new Date() } }); //to update recent access
     const questionEmbedding = await generateEmbedding(question);
-    const chunks = (await Chunk.find({ repoId })).map(c => ({
-      repo: repo.owner + "/" + repo.name,
-      content: c.content,
-      embedding: c.embedding,
-      filepath: c.filePath,
-      startIndex: c.startIndex,
-      chunkIndex: c.chunkIndex,
-    }));
-    const topKChunksWithSimilarity = findSimilarChunks(questionEmbedding, chunks, 15);
-    const context = topKChunksWithSimilarity
-      .map(c => `--- FILE: ${c.filepath} ---\n${c.content}`)
-      .join("\n\n");
+    const topKChunks = await findSimilarChunks(repoId, `${repo.owner}/${repo.name}`, questionEmbedding, 15);
+    const context = topKChunks.map(c => `--- FILE: ${c.filepath} ---\n${c.content}`).join("\n\n");
     const repoTreePrompt = treeToPrompt(Array.isArray(repo.repoTree) ? repo.repoTree : []);
     const answer = await generateAnswer(
       question,
@@ -263,7 +252,6 @@ export const chatWithRepo = async (req: Request, res: Response) => {
       repoTreePrompt,
       safeHistory || [],
     );
-    //save the msgs
     await ChatMsg.create({
       repoId: repo._id,
       role: "user",
