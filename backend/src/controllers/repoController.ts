@@ -5,7 +5,7 @@ import { getRepoDetails, parseGitHubUrl } from "../services/githubService";
 import { chunkText, type TextChunk } from "../services/chunkService";
 import { findSimilarChunks, generateEmbedding, generateEmbeddingsForChunks } from "../services/embeddingService";
 import { buildJsonTree, hasAllowedExtension, MAX_FILE_SIZE, shouldSkipPath, treeToPrompt } from "../utils/fileUtils";
-import { getFileContent, getRepoTree } from "../services/githubService";
+import { getFileContent, getRepoTree, checkBranchExists } from "../services/githubService";
 import { generateAnswer } from "../services/llm/chatCompletion";
 import ChatMsg from "../models/chatMsgModel";
 import type { RepoDocument } from "../models/repoModel";
@@ -74,10 +74,8 @@ async function processIndexing(repo: RepoDocument): Promise<void> {
     lastIndexedAt: new Date(),
     indexError: null,
   });
-
   console.log(`[ingestRepo] Successfully indexed ${repoName}: ${totalChunks} chunks from ${filePaths.length} files`);
 }
-
 // ============================================================
 // POST /repos — Register a repo
 // ============================================================
@@ -91,7 +89,13 @@ export const registerRepo = async (req: Request, res: Response) => {
   const { owner, name } = parsed;
   let normalizedBranch: string;
   try {
-    normalizedBranch = typeof branch === "string" && branch.trim().length > 0 ? branch.trim() : (await getRepoDetails(owner, name)).default_branch;
+    if (typeof branch === "string" && branch.trim().length > 0) {
+      normalizedBranch = branch.trim();
+      const branchExists = await checkBranchExists(owner, name, normalizedBranch);
+      if (!branchExists) return res.status(400).json({ message: `Branch "${normalizedBranch}" — it doesn't exist in this repository` });
+    } else {
+      normalizedBranch = (await getRepoDetails(owner, name)).default_branch;
+    }
   } catch (error: any) {
     if (error.response?.status === 404) {
       return res.status(400).json({message: "Repository does not exist or is not publicly accessible"});

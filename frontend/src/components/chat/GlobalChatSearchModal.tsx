@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '../ui/input';
 import { useMessageSearch } from '../../features/chat/chat.hooks';
+import { getErrorMessage } from '../../lib/getErrorMessage';
 
 type GlobalChatSearchModalProps = {
   open: boolean;
@@ -83,8 +84,7 @@ export default function GlobalChatSearchModal({ open, onClose }: GlobalChatSearc
   const showEmpty = !showIdle && !isFetching && !isError && results.length === 0;
   const errorMessage = useMemo(() => {
     if (!isError) return '';
-    if (error instanceof Error) return error.message;
-    return 'Failed to search messages.';
+    return getErrorMessage(error, 'Failed to search messages.');
   }, [isError, error]);
 
   return (

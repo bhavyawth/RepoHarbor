@@ -48,6 +48,7 @@ import { useDeleteRepo, useGetRepos, usePinRepo, useRepoSummary } from '../featu
 import type { Repo } from '../features/repo/repos.api';
 import { useRepoDetails } from '../features/github/github.hooks';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import { getErrorMessage } from '../lib/getErrorMessage';
 
 type AppSidebarProps = {
   onOpenSearch?: () => void;
@@ -539,13 +540,9 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
         repoInfoError={repoSummaryError || repoInfoError}
         repoInfoErrorMessage={
           repoSummaryError
-            ? (repoSummaryErrorValue instanceof Error
-              ? repoSummaryErrorValue.message
-              : 'Failed to load repository summary.')
+            ? getErrorMessage(repoSummaryErrorValue, 'Failed to load repository summary.')
             : repoInfoError
-              ? (repoInfoErrorValue instanceof Error
-                ? repoInfoErrorValue.message
-                : 'Failed to load repo details.')
+              ? getErrorMessage(repoInfoErrorValue, 'Failed to load repo details.')
               : undefined
         }
         repoInfo={repoInfo}

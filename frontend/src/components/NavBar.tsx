@@ -34,6 +34,7 @@ import { useEffect, useState } from 'react';
 import { RepoStructurePanel } from './RepoStructurePanel';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import MarkdownRenderer from './chat/MarkdownRenderer';
+import { getErrorMessage } from '../lib/getErrorMessage';
 
 export default function Navbar() {
   const { data: user } = useAuth();
@@ -274,9 +275,7 @@ export default function Navbar() {
             )}
             {!repoSummaryLoading && repoSummaryError && (
               <div className="rounded-md border border-red-200 bg-red-50 p-3 text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
-                {repoSummaryErrorValue instanceof Error
-                  ? repoSummaryErrorValue.message
-                  : 'Failed to summarize repository.'}
+                {getErrorMessage(repoSummaryErrorValue, 'Failed to summarize repository.')}
               </div>
             )}
             {!repoSummaryLoading && !repoSummaryError && repoSummary?.summary && (

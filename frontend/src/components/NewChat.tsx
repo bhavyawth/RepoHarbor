@@ -7,6 +7,7 @@ import { useRegisterRepo } from '../features/repo/repos.hooks';
 import { useChatStore } from '../store/chat.store';
 import FloatingBlob from './FloatingBlob';
 import { normalizeRepoInput } from '../lib/repo-input';
+import { getErrorMessage } from '../lib/getErrorMessage';
 
 export default function NewChat() {
   const navigate = useNavigate();
@@ -50,7 +51,7 @@ export default function NewChat() {
       setActiveChatId(chat._id);
       navigate(`/chat/${chat._id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create chat.');
+      setError(getErrorMessage(err, 'Failed to create chat.'));
     } finally {
       setIsCreating(false);
     }

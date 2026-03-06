@@ -6,6 +6,7 @@ import {
   SheetTitle,
 } from "./ui/sheet"
 import { type RepoDetails } from "../features/github/github.api"
+import MarkdownRenderer from "./chat/MarkdownRenderer"
 
 type Props = {
   repoInfoOpen: boolean
@@ -69,7 +70,9 @@ export function RepoInfoSheet({
                     {repoInfoTarget.owner}
                   </p>
                 </div>
-                <p className="text-sm">{description}</p>
+                <p className="text-sm overflow-y-auto max-h-60">
+                  <MarkdownRenderer content={description} />
+                </p>
                 <div className="flex flex-wrap gap-2">
                   <span className="rounded-md bg-sidebar-accent px-2 py-1 text-xs">
                     ⭐ {repoInfo?.stargazers_count ?? 0}

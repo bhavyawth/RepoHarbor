@@ -9,6 +9,7 @@ import { useChatStore } from '../store/chat.store';
 import { useRegisterRepo } from '../features/repo/repos.hooks';
 import { useState, useRef, type FormEvent, useEffect } from 'react';
 import { normalizeRepoInput } from '../lib/repo-input';
+import { getErrorMessage } from '../lib/getErrorMessage';
 
 const features = [
   {
@@ -69,11 +70,7 @@ export default function Hero() {
         window.location.href = "http://localhost:3000/api/auth/github";
         return;
       }
-      setError(
-        err instanceof Error && err.message
-          ? err.message
-          : "Failed to create chat. Please check the repository and try again."
-      );
+      setError(getErrorMessage(err, "Failed to create chat. Please check the repository and try again."));
     }
   };
 

@@ -8,6 +8,7 @@ import { useChatHistory, useSendMessage } from '../features/chat/chat.hooks';
 import { Button } from '../components/ui/button';
 import ChatContainer from '../components/chat/ChatContainer';
 import IndexingTerminal from '../components/chat/IndexingTerminal';
+import { getErrorMessage } from '../lib/getErrorMessage';
 
 export default function ChatPage() {
   const { chatId } = useParams();
@@ -63,7 +64,7 @@ export default function ChatPage() {
         ...prev,
         [currentChatId]: trimmedMessage,
       }));
-      setSendError(error instanceof Error ? error.message : 'Failed to send message.');
+      setSendError(getErrorMessage(error, 'Failed to send message.'));
     }
   };
 

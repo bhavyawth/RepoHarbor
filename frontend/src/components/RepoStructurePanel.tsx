@@ -3,6 +3,7 @@ import { Button } from './ui/button';
 // import { ScrollArea } from './ui/scroll-area';
 import { File, Folder, Tree } from './ui/file-tree';
 import type { RepoNode } from '../features/repo/repos.api';
+import { getErrorMessage } from '../lib/getErrorMessage';
 
 type Props = {
   repoName: string;
@@ -62,7 +63,7 @@ export function RepoStructurePanel({
       )}
       {!isLoading && isError && (
         <div className="rounded-md border border-red-200 bg-red-50 p-3 text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
-          {error instanceof Error ? error.message : 'Failed to fetch repository structure.'}
+          {getErrorMessage(error, 'Failed to fetch repository structure.')}
         </div>
       )}
       {!isLoading && !isError && (

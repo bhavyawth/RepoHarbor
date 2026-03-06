@@ -129,3 +129,12 @@ export function parseGitHubUrl(url: string): { owner: string; name: string } | n
     }
 }
 
+export const checkBranchExists = async (owner: string, name: string, branch: string): Promise<boolean> => {
+    try {
+        await octokit.rest.repos.getBranch({ owner, repo: name, branch });
+        return true;
+    } catch (error: any) {
+        if (error.response?.status === 404) return false;
+        throw error; 
+    }
+};
