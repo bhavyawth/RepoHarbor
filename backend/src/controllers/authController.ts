@@ -81,11 +81,12 @@ export const githubCallback = async (req: Request, res: Response) => {
 };
 
 export const logout = async (req: Request, res: Response) => {
+  if (!req.user?._id) return res.status(401).json({ message: 'Unauthorized' });
   try {
-    await User.findByIdAndUpdate(req.user?.id, { $inc: { tokenVersion: 1 } });
+    const updated = await User.findByIdAndUpdate(req.user._id, { $inc: { tokenVersion: 1 } });
+    if (!updated) return res.status(404).json({ message: 'User not found' });
     res.clearCookie("accessToken", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax" });
     res.clearCookie("refreshToken", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax" });
-    // TODO: return res.redirect(`${FRONTEND_URL}/logout-success`);
     return res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
     console.error("Logout error:", error);

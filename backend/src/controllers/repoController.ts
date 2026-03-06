@@ -74,7 +74,6 @@ async function processIndexing(repo: RepoDocument): Promise<void> {
     lastIndexedAt: new Date(),
     indexError: null,
   });
-  console.log(`[ingestRepo] Successfully indexed ${repoName}: ${totalChunks} chunks from ${filePaths.length} files`);
 }
 // ============================================================
 // POST /repos — Register a repo

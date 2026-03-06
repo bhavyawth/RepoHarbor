@@ -60,7 +60,7 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
   const { data: repos } = useGetRepos();
   const navigate = useNavigate();
   const { data: user } = useAuth();
-  const { mutate: logout } = useLogout()
+  const { mutateAsync: logout } = useLogout()
   const pinRepoMutation = usePinRepo();
   const deleteRepoMutation = useDeleteRepo();
 
@@ -93,9 +93,13 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
     (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
   );;
 
-  const handleLogout = () => {
-    logout();
-    window.location.href = '/';
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      setActiveChatId(null);
+      navigate('/', { replace: true });
+    }
   };
   const handlePinRepo = (repoId: string) => {
     pinRepoMutation.mutate(repoId);
@@ -140,13 +144,14 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
 
   useEffect(() => {
     const activeChat = chats.find((chat) => chat._id === activeChatId);
+    if (!activeChat) return;
     if (activeChatId) {
       const branch = activeChat?.branch;
       document.title = `${activeChat?.owner}/${activeChat?.name} (${branch}) • RepoHarbor`;
     } else {
-      document.title = "RepoHarbor";
+      document.title = "RepoHarbor: Chat with your Repository";
     }
-  }, [activeChatId]);
+  }, [activeChatId, chats]);
 
   return (
     <Sidebar

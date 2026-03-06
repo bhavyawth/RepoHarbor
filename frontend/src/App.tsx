@@ -3,13 +3,14 @@ import Hero from './pages/HeroPage.tsx'
 import AppLayout from './layouts/AppLayout.tsx'
 import ProtectedRoute from './components/ProtectedComponent.tsx'
 import { useAuth } from './features/auth/auth.hooks.ts'
-import { useEffect } from 'react'
+import { Suspense, useEffect } from 'react'
 import NewChat from './components/NewChat.tsx'
 import ChatPage from './pages/ChatPage.tsx'
 import NotFoundPage from './pages/NotFoundPage.tsx'
+import AppLoader from './components/AppLoader.tsx'
 
 function App() {
-  const { data: user } = useAuth();
+  const { data: user, isLoading: isAuthLoading } = useAuth();
 
   useEffect(() => {
     const theme = localStorage.getItem('theme');
@@ -22,47 +23,52 @@ function App() {
     if (theme) localStorage.setItem('theme', theme);
   }, []);
 
+  if (isAuthLoading && user === undefined) {
+    return <AppLoader />;
+  }
+
   return (
     <div className="min-h-screen">
+      <Suspense fallback={<AppLoader />}>
+        <Routes>
+          <Route element={<AppLayout />}>
 
-      <Routes>
-        <Route element={<AppLayout />}>
+            <Route
+              path="/"
+              element={(user) ? <Navigate to="/chat/new" replace /> : <Hero />}
+            />
 
-          <Route
-            path="/"
-            element={(user) ? <Navigate to="/chat/new" replace /> : <Hero />}
-          />
+            <Route
+              path="/chat"
+              element={
+                <ProtectedRoute>
+                  <Navigate to="/chat/new" replace />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/chat"
-            element={
-              <ProtectedRoute>
-                <Navigate to="/chat/new" replace />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/chat/new"
+              element={
+                <ProtectedRoute>
+                  <NewChat />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/chat/new"
-            element={
-              <ProtectedRoute>
-                <NewChat />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/chat/:chatId"
+              element={
+                <ProtectedRoute>
+                  <ChatPage />
+                </ProtectedRoute>
+              }
+            />
+          </Route>
 
-          <Route
-            path="/chat/:chatId"
-            element={
-              <ProtectedRoute>
-                <ChatPage />
-              </ProtectedRoute>
-            }
-          />
-        </Route>
-
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Suspense>
     </div>
   )
 }
