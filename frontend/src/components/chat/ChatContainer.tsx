@@ -3,6 +3,7 @@ import { Brain, Loader2 } from 'lucide-react';
 import type { ChatMessage } from '../../features/chat/chat.api';
 import MessageRenderer from './MessageRenderer';
 import { useEffect } from 'react';
+import { Skeleton } from '../ui/skeleton';
 
 type ChatContainerProps = {
   messages: ChatMessage[];
@@ -30,10 +31,62 @@ export default function ChatContainer({
     }
   }, [messages, isThinking, sendError]);
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-7 sm:px-6">
+    <div className="mx-auto w-full max-w-5xl space-y-6 px-4 sm:px-6">
       {historyLoading && (
-        <div className="flex items-center justify-center py-14">
-          <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+        <div className="flex flex-col gap-6 px-4 py-6">
+          {/* Sent */}
+          <div className="flex items-start gap-3 flex-row-reverse">
+            <Skeleton className="h-7 w-7 rounded-full shrink-0" />
+            <div className="flex flex-col gap-2 items-end w-[55%] sm:w-[45%] md:w-[40%]">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-[70%]" />
+            </div>
+          </div>
+          {/* Received */}
+          <div className="flex items-start gap-3">
+            <Skeleton className="h-7 w-7 rounded-full shrink-0" />
+            <div className="flex flex-col gap-2 w-[70%] sm:w-[60%] md:w-[55%]">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-[90%]" />
+              <Skeleton className="h-4 w-[75%]" />
+            </div>
+          </div>
+          {/* Sent */}
+          <div className="flex items-start gap-3 flex-row-reverse">
+            <Skeleton className="h-7 w-7 rounded-full shrink-0" />
+            <div className="flex flex-col gap-2 items-end w-[60%] sm:w-[50%] md:w-[42%]">
+              <Skeleton className="h-4 w-[80%]" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-[55%]" />
+            </div>
+          </div>
+          {/* Received */}
+          <div className="flex items-start gap-3">
+            <Skeleton className="h-7 w-7 rounded-full shrink-0" />
+            <div className="flex flex-col gap-2 w-[65%] sm:w-[55%] md:w-[50%]">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-[78%]" />
+              <Skeleton className="h-4 w-[85%]" />
+            </div>
+          </div>
+          {/* Sent */}
+          <div className="flex items-start gap-3 flex-row-reverse">
+            <Skeleton className="h-7 w-7 rounded-full shrink-0" />
+            <div className="flex flex-col gap-2 items-end w-[50%] sm:w-[40%] md:w-[35%]">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-[65%]" />
+              <Skeleton className="h-4 w-[110%]" />
+            </div>
+          </div>
+          {/* Received */}
+          {/* <div className="flex items-start gap-3">
+            <Skeleton className="h-7 w-7 rounded-full shrink-0" />
+            <div className="flex flex-col gap-2 w-[72%] sm:w-[62%] md:w-[56%]">
+              <Skeleton className="h-4 w-[85%]" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-[70%]" />
+            </div>
+          </div> */}
         </div>
       )}
 

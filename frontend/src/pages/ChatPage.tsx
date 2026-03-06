@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState, useRef, type FormEvent, type KeyboardEvent } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { useChatStore } from '../store/chat.store';
-import { useRepoIndexStatus, reposKeys } from '../features/repo/repos.hooks';
+import { useGetRepos, useRepoIndexStatus, reposKeys } from '../features/repo/repos.hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { useChatHistory, useSendMessage } from '../features/chat/chat.hooks';
 import { Button } from '../components/ui/button';
@@ -11,9 +11,11 @@ import IndexingTerminal from '../components/chat/IndexingTerminal';
 
 export default function ChatPage() {
   const { chatId } = useParams();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const { chats, setActiveChatId } = useChatStore();
+  const { data: repos = [], isSuccess: reposLoaded } = useGetRepos();
   const [draftsByChatId, setDraftsByChatId] = useState<Record<string, string>>({});
   const [sendError, setSendError] = useState<string | null>(null);
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
@@ -82,6 +84,15 @@ export default function ChatPage() {
   useEffect(() => {
     if (chatId) setActiveChatId(chatId);
   }, [chatId, setActiveChatId]);
+
+  useEffect(() => {
+    if (!chatId || !reposLoaded) return;
+    const existsInStore = chats.some((chat) => chat._id === chatId);
+    const existsInRepos = repos.some((repo) => repo._id === chatId);
+    if (existsInStore || existsInRepos) return;
+    setActiveChatId(null);
+    navigate('/chat/new', { replace: true });
+  }, [chatId, chats, navigate, repos, reposLoaded, setActiveChatId]);
 
   useEffect(() => {
     setSendError(null);

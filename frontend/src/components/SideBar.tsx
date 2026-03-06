@@ -100,13 +100,16 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
     pinRepoMutation.mutate(repoId);
   };
   const handleDeleteRepo = (repoId: string) => {
-    deleteRepoMutation.mutate(repoId);
+    const isActive = activeChatId === repoId;
     removeChat(repoId);
-    if (activeChatId === repoId) {
+    deleteRepoMutation.mutate(repoId);
+    if (isActive) {
       setActiveChatId(null);
-      navigate('/chat/new');
+      queueMicrotask(() => {
+        navigate('/chat/new', { replace: true });
+      });
     }
-  }
+  };
   const handleRepoInfo = (repo: Repo) => {
     setRepoInfoTarget(repo);
     setRepoInfoOpen(true);
@@ -134,6 +137,15 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
     }
   }, [repos, setChats]);
 
+  useEffect(() => {
+    const activeChat = chats.find((chat) => chat._id === activeChatId);
+    if (activeChatId) {
+      const branch = activeChat?.branch;
+      document.title = `${activeChat?.owner}/${activeChat?.name} (${branch}) • RepoHarbor`;
+    } else {
+      document.title = "RepoHarbor";
+    }
+  }, [activeChatId]);
 
   return (
     <Sidebar
@@ -237,7 +249,7 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
                     <SidebarGroupContent className="pt-1">
                       <SidebarMenu>
                         {pinnedChats.map((chat) => {
-                          const branch = chat.branch ?? 'main';
+                          const branch = chat.branch;
                           return (
                             <SidebarMenuItem key={chat._id} className="group/item relative list-none">
                               {/* The whole row is one block */}
@@ -324,7 +336,10 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                       className="cursor-pointer gap-2 text-red-600 dark:text-red-400"
-                                      onClick={() => handleDeleteRepo(chat._id)}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteRepo(chat._id);
+                                      }}
                                     >
                                       <Trash2 className="size-4" />
                                       Delete
@@ -446,7 +461,10 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                       className="cursor-pointer gap-2 text-red-600 dark:text-red-400"
-                                      onClick={() => handleDeleteRepo(chat._id)}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteRepo(chat._id);
+                                      }}
                                     >
                                       <Trash2 className="size-4" />
                                       Delete

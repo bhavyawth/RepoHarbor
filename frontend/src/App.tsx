@@ -6,6 +6,7 @@ import { useAuth } from './features/auth/auth.hooks.ts'
 import { useEffect } from 'react'
 import NewChat from './components/NewChat.tsx'
 import ChatPage from './pages/ChatPage.tsx'
+import NotFoundPage from './pages/NotFoundPage.tsx'
 
 function App() {
   const { data: user } = useAuth();
@@ -29,11 +30,11 @@ function App() {
 
           <Route
             path="/"
-            element={(user) ? <Navigate to="/app" replace /> : <Hero />}
+            element={(user) ? <Navigate to="/chat/new" replace /> : <Hero />}
           />
 
           <Route
-            path="/app"
+            path="/chat"
             element={
               <ProtectedRoute>
                 <Navigate to="/chat/new" replace />
@@ -58,8 +59,9 @@ function App() {
               </ProtectedRoute>
             }
           />
-
         </Route>
+
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </div>
   )
