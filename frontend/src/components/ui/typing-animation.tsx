@@ -160,9 +160,7 @@ export function TypingAnimation({
     >
       {displayedText}
       {shouldShowCursor && (
-        <span
-          className={cn("inline-block bg-linear-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent", blinkCursor && "animate-blink-cursor")}
-        >
+        <span className={cn( "inline text-purple-500", blinkCursor && "animate-blink-cursor" )}>
           {getCursorChar()}
         </span>
       )}

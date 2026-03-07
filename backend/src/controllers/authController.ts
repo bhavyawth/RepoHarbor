@@ -28,20 +28,16 @@ export const githubCallback = async (req: Request, res: Response) => {
       },
       { headers: { Accept: "application/json" } }
     );
-
     const githubAccessToken = tokenResponse.data.access_token;
     if (!githubAccessToken) return res.status(400).json({ message: "Failed to obtain access token from GitHub." });
-
     const userResponse = await axios.get("https://api.github.com/user", {
       headers: { Authorization: `Bearer ${githubAccessToken}` },
     });
     const emailResponse = await axios.get("https://api.github.com/user/emails", {
       headers: { Authorization: `Bearer ${githubAccessToken}` },
     });
-
     const githubUserdata = userResponse.data;
     const primaryEmail = emailResponse.data.find((email: any) => email.primary)?.email || githubUserdata.email;
-
     let user: UserDocument | null = await User.findOne({ githubId: githubUserdata.id });
     if (!user) {
       user = new User({
@@ -56,7 +52,6 @@ export const githubCallback = async (req: Request, res: Response) => {
       user.email = primaryEmail;
       await user.save();
     }
-
     const accessToken = generateAccessJwtToken(user);
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
@@ -70,10 +65,8 @@ export const githubCallback = async (req: Request, res: Response) => {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: Number(process.env.REFRESH_JWT_EXPIRATION)*24*60*60*1000, // in ms
-    });
-    // todo: add frontend url
+    });    // todo: add frontend url
     return res.redirect(`${FRONTEND_URL}`);
-    // return res.status(200).json({ message: "Authentication successful" });
   } catch (error: any) {
     console.error("GitHub OAuth error:", error.message);
     return res.status(500).json({ error: "GitHub authentication failed" });
@@ -98,12 +91,10 @@ export const refreshToken = async (req: Request, res: Response) => {
   try {
     const refreshToken = req.cookies?.refreshToken;
     if (!refreshToken) return res.status(401).json({ message: "No refresh token provided" });
-
     const decoded: any = verifyRefreshJwtToken(refreshToken);
     const user = await User.findById(decoded.id);
     if (!user) return res.status(404).json({ message: "User not found" });
     if (decoded.tokenVersion !== user.tokenVersion) return res.status(401).json({ message: "Invalid refresh token" });
-
     const newAccessToken = generateAccessJwtToken(user);
     const newRefreshToken = generateRefreshJwtToken(user);
     res.cookie("accessToken", newAccessToken, {

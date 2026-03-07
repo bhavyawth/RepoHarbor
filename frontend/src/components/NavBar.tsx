@@ -82,6 +82,17 @@ export default function Navbar() {
     }
   };
 
+  const handleTopScroll = () => {
+    if (location.pathname !== '/') {
+      navigate('/#topdiv');
+      return;
+    }
+    const element = document.getElementById('topdiv');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   const handleRepoInfo = () => {
     if (!activeRepo) return;
     setRepoInfoTarget(activeRepo);
@@ -139,9 +150,9 @@ export default function Navbar() {
     return (
       <nav className="pointer-events-none fixed inset-x-0 top-5 z-40 px-4 sm:px-8 lg:px-12">
         <div className="pointer-events-auto mx-auto flex w-full max-w-5xl items-center justify-between rounded-full border border-slate-300/80 bg-white/75 px-6 py-2.5 shadow-sm backdrop-blur-md dark:border-slate-700/80 dark:bg-slate-900/70">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 cursor-pointer" onClick={handleTopScroll}>
             <Logo className="h-10 w-10" />
-            <span className="text-base font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+            <span className="hidden sm:inline text-base font-semibold tracking-tight text-slate-900 dark:text-slate-100">
               RepoHarbor
             </span>
           </div>
@@ -150,17 +161,17 @@ export default function Navbar() {
             <Button
               variant="ghost"
               onClick={handleFeatureScroll}
-              className="transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 rounded-full px-5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100/80 dark:text-slate-200 dark:hover:bg-slate-800/80"
+              className="transform-gpu  cursor-pointer transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 rounded-full px-5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100/80 dark:text-slate-200 dark:hover:bg-slate-800/80"
             >
               Features
             </Button>
             <Button
               onClick={handleGithubLogin}
-              className="rounded-full bg-slate-900 px-5 py-2 text-sm font-medium text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100"
+              className="rounded-full cursor-pointer bg-slate-900 px-5 py-2 text-sm font-medium text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100"
             >
               Get Started
             </Button>
-            <AnimatedThemeToggler className="inline-flex items-center justify-center transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100" />
+            <AnimatedThemeToggler className="inline-flex cursor-pointer items-center justify-center transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100" />
           </div>
         </div>
       </nav>

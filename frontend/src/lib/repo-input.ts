@@ -1,8 +1,11 @@
 export type RepoInputResult = { repoUrl?: string; error?: string };
 
 export function normalizeRepoInput(input: string): RepoInputResult {
-  const trimmed = input.trim();
+  let trimmed = input.trim();
   if (!trimmed) return { error: 'Repository URL is required.' };
+  if (trimmed.match(/^(?:www\.)?github\.com\//i)) {
+    trimmed = `https://${trimmed}`;
+  }
   const ownerRepoMatch = trimmed.match(/^([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)$/);
   if (ownerRepoMatch) {
     const owner = ownerRepoMatch[1];
@@ -28,4 +31,3 @@ export function normalizeRepoInput(input: string): RepoInputResult {
     return { error: 'Enter a valid GitHub URL or owner/repo.' };
   }
 }
-

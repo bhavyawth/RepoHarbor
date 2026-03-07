@@ -82,7 +82,6 @@ export const registerRepo = async (req: Request, res: Response) => {
   const { repoUrl, branch } = req.body;
   if (!repoUrl || typeof repoUrl !== "string") return res.status(400).json({ message: "repoUrl is required" });
   let input = repoUrl.trim();
-  if (!input.startsWith("http")) input = `https://github.com/${input}`;
   const parsed = parseGitHubUrl(input);
   if (!parsed) return res.status(400).json({ message: "Invalid GitHub input. Provide either https://github.com/owner/name or owner/name" });
   const { owner, name } = parsed;
