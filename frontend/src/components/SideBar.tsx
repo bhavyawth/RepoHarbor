@@ -41,22 +41,19 @@ import Logo from './Logo';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatedThemeToggler } from './ui/animated-theme-toggler';
-import { RepoInfoSheet } from './RepoInfoSheet';
 import { useAuth, useLogout } from '../features/auth/auth.hooks';
 import { useChatStore } from '../store/chat.store';
-import { useDeleteRepo, useGetRepos, usePinRepo, useRepoSummary } from '../features/repo/repos.hooks';
+import { useDeleteRepo, useGetRepos, usePinRepo } from '../features/repo/repos.hooks';
 import type { Repo } from '../features/repo/repos.api';
-import { useRepoDetails } from '../features/github/github.hooks';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
-import { getErrorMessage } from '../lib/getErrorMessage';
 
 type AppSidebarProps = {
   onOpenSearch?: () => void;
 };
 
 export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
-  const { state } = useSidebar();
-  let isCollapsed = state === 'collapsed';
+  const { state, isMobile, setOpenMobile } = useSidebar();
+  let isCollapsed = !isMobile && state === 'collapsed';
   const { data: repos } = useGetRepos();
   const navigate = useNavigate();
   const { data: user } = useAuth();
@@ -67,24 +64,7 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
   const { chats, setChats, activeChatId, setActiveChatId, removeChat } = useChatStore();
   const [pinnedOpen, setPinnedOpen] = useState(true);
   const [allChatsOpen, setAllChatsOpen] = useState(true);
-  const { repoInfoTarget, setRepoInfoTarget } = useChatStore();
-  const { repoInfoOpen, setRepoInfoOpen } = useChatStore();
-  const {
-    data: repoInfo,
-    isLoading: repoInfoLoading,
-    isError: repoInfoError,
-    error: repoInfoErrorValue,
-  } = useRepoDetails(
-    repoInfoTarget?.owner ?? '',
-    repoInfoTarget?.name ?? '',
-    repoInfoOpen && !!repoInfoTarget
-  );
-  const {
-    data: repoSummary,
-    isLoading: repoSummaryLoading,
-    isError: repoSummaryError,
-    error: repoSummaryErrorValue,
-  } = useRepoSummary(repoInfoOpen && !!repoInfoTarget ? repoInfoTarget?._id : undefined);
+  const { setRepoInfoTarget, setRepoInfoOpen } = useChatStore();
 
   const pinnedChats: Repo[] = chats.filter((repo) => repo.isPinned).sort(
     (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
@@ -92,6 +72,14 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
   const unpinnedChats: Repo[] = chats.filter((repo) => !repo.isPinned).sort(
     (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
   );;
+  const chatMenuSide = 'right';
+  const chatMenuAlign = 'start';
+  const profileMenuSide = isMobile ? 'top' : 'right';
+
+  const closeSidebarOnMobile = () => {
+    if (!isMobile) return;
+    setOpenMobile(false);
+  };
 
   const handleLogout = async () => {
     try {
@@ -121,6 +109,7 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
   };
 
   useEffect(() => {
+    if (isMobile) return;
     const sidebarOpen = localStorage.getItem('sidebarOpen');
     isCollapsed = sidebarOpen === 'false';
     if (sidebarOpen === null) {
@@ -128,13 +117,7 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
     } else {
       localStorage.setItem('sidebarOpen', state !== 'collapsed' ? 'true' : 'false');
     }
-  }, [state]);
-
-  useEffect(() => {
-    if (!repoInfoOpen) {
-      setRepoInfoTarget(null);
-    }
-  }, [repoInfoOpen]);
+  }, [state, isMobile]);
 
   useEffect(() => {
     if (repos) {
@@ -156,7 +139,7 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
   return (
     <Sidebar
       collapsible="icon"
-      className="border-r border-slate-200/80 bg-white/95 text-slate-900 backdrop-blur-sm dark:border-slate-800 dark:bg-black/95 dark:text-slate-100"
+      className="overflow-x-hidden border-r border-slate-200/80 bg-white/95 text-slate-900 backdrop-blur-sm dark:border-slate-800 dark:bg-black/95 dark:text-slate-100"
     >
       <SidebarHeader className="px-3 pt-3 pb-2">
         <SidebarMenu className='mb-3'>
@@ -169,10 +152,8 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
                 className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
               >
                 <div className="group/logo flex flex-1 items-center gap-2">
-                  <div className="relative flex aspect-square size-11 items-center justify-center">
-                    <div className="flex size-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-800 shadow-sm transition-colors group-data-[collapsible=icon]:group-hover/logo:hidden dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
-                      <Logo className="size-10" />
-                    </div>
+                  <div className="relative flex aspect-square size-11 shrink-0 items-center justify-center overflow-hidden rounded-xl">
+                    <Logo className="size-9" />
                     <div className="absolute inset-0 hidden items-center justify-center group-data-[collapsible=icon]:group-hover/logo:flex">
                       <SidebarTrigger className="size-11 rounded-xl text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800" />
                     </div>
@@ -195,7 +176,10 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
             <SidebarMenuButton
               tooltip="Search Chats"
               size="lg"
-              onClick={onOpenSearch}
+              onClick={() => {
+                onOpenSearch?.();
+                closeSidebarOnMobile();
+              }}
               className="h-10 rounded-xl border border-slate-200/80 bg-white text-slate-600 shadow-sm transition-colors hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700/80 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100
                 group-data-[collapsible=icon]:justify-center
                 group-data-[collapsible=icon]:px-0
@@ -218,6 +202,7 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
               onClick={() => {
                 setActiveChatId(null);
                 navigate('/chat/new');
+                closeSidebarOnMobile();
               }}
               className="h-10 rounded-xl bg-slate-900 text-white  hover:text-amber-50 shadow-sm transition-all hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200
                 group-data-[collapsible=icon]:justify-center
@@ -234,7 +219,7 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="overflow-x-hidden">
         {!isCollapsed && (
           <>
             {pinnedChats.length > 0 && (
@@ -263,6 +248,7 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
                                 onClick={() => {
                                   setActiveChatId(chat._id);
                                   navigate(`/chat/${chat._id}`);
+                                  closeSidebarOnMobile();
                                 }}
                                 className={`relative w-full cursor-pointer rounded-xl border px-3 py-2.5 transition-all duration-150 overflow-hidden
                                   ${activeChatId === chat._id
@@ -314,12 +300,11 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
                                     asChild
                                     onClick={(e) => e.stopPropagation()}
                                   >
-                                    <div className="absolute inset-y-0 right-0 flex items-center opacity-0 group-hover/item:opacity-100 transition-opacity duration-150">
-                                      <div className="w-12 h-full bg-gradient-to-r from-transparent to-slate-100 dark:to-slate-800 pointer-events-none" />
-                                      <div className="h-full flex items-center pr-2 pl-1 bg-slate-100 dark:bg-slate-800">
+                                    <div className="absolute inset-y-0 right-0 flex items-center opacity-100 transition-opacity duration-150 md:opacity-0 md:group-hover/item:opacity-100">
+                                      <div className="h-full flex items-center pr-2 pl-1">
                                         <button
                                           type="button"
-                                          className="size-8 rounded-md flex items-center justify-center text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                                          className="size-8 rounded-md border border-slate-300/70 bg-slate-100/90 flex items-center justify-center text-slate-600 hover:bg-slate-200 hover:text-slate-800 dark:border-slate-600/70 dark:bg-slate-800/90 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-slate-100 transition-colors"
                                         >
                                           <MoreVertical className="size-4" />
                                           <span className="sr-only">Chat actions</span>
@@ -328,9 +313,11 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
                                     </div>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent
-                                    side="right"
-                                    align="start"
-                                    className="rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+                                    side={chatMenuSide}
+                                    align={chatMenuAlign}
+                                    collisionPadding={12}
+                                    sideOffset={6}
+                                    className="z-[80] max-w-[calc(100vw-1rem)] rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
                                   >
                                     <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => handlePinRepo(chat._id)}>
                                       <Pin className="size-4" />
@@ -388,6 +375,7 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
                                 onClick={() => {
                                   setActiveChatId(chat._id);
                                   navigate(`/chat/${chat._id}`);
+                                  closeSidebarOnMobile();
                                 }}
                                 className={`relative w-full cursor-pointer rounded-xl border px-3 py-2.5 transition-all duration-150 overflow-hidden
                                   ${activeChatId === chat._id
@@ -439,12 +427,11 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
                                     asChild
                                     onClick={(e) => e.stopPropagation()}
                                   >
-                                    <div className="absolute inset-y-0 right-0 flex items-center opacity-0 group-hover/item:opacity-100 transition-opacity duration-150">
-                                      <div className="w-12 h-full bg-gradient-to-r from-transparent to-slate-100 dark:to-slate-800 pointer-events-none" />
-                                      <div className="h-full flex items-center pr-2 pl-1 bg-slate-100 dark:bg-slate-800">
+                                    <div className="absolute inset-y-0 right-0 flex items-center opacity-100 transition-opacity duration-150 md:opacity-0 md:group-hover/item:opacity-100">
+                                      <div className="h-full flex items-center pr-2 pl-1">
                                         <button
                                           type="button"
-                                          className="size-8 rounded-md flex items-center justify-center text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                                          className="size-8 rounded-md border border-slate-300/70 bg-slate-100/90 flex items-center justify-center text-slate-600 hover:bg-slate-200 hover:text-slate-800 dark:border-slate-600/70 dark:bg-slate-800/90 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-slate-100 transition-colors"
                                         >
                                           <MoreVertical className="size-4" />
                                           <span className="sr-only">Chat actions</span>
@@ -453,9 +440,11 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
                                     </div>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent
-                                    side="right"
-                                    align="start"
-                                    className="rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+                                    side={chatMenuSide}
+                                    align={chatMenuAlign}
+                                    collisionPadding={12}
+                                    sideOffset={6}
+                                    className="z-[80] max-w-[calc(100vw-1rem)] rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
                                   >
                                     <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => handlePinRepo(chat._id)}>
                                       <Pin className="size-4" />
@@ -514,7 +503,13 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
                     <ChevronsUpDown className="ml-auto size-4 group-data-[collapsible=icon]:hidden" />
                   </SidebarMenuButton>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent side="right" align="end" className="w-56 rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                <DropdownMenuContent
+                  side={profileMenuSide}
+                  align="end"
+                  collisionPadding={12}
+                  sideOffset={6}
+                  className="z-[80] w-56 max-w-[calc(100vw-1rem)] rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+                >
                   <DropdownMenuItem className="cursor-pointer">
                     <div className="w-full" onClick={(e) => e.stopPropagation()}>
                       <AnimatedThemeToggler className="flex w-full items-center gap-2">
@@ -538,26 +533,6 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
         </SidebarMenu>
       </SidebarFooter>
       <SidebarRail />
-      <RepoInfoSheet
-        repoInfoOpen={repoInfoOpen}
-        setRepoInfoOpen={setRepoInfoOpen}
-        repoInfoLoading={repoSummaryLoading || repoInfoLoading}
-        repoInfoError={repoSummaryError || repoInfoError}
-        repoInfoErrorMessage={
-          repoSummaryError
-            ? getErrorMessage(repoSummaryErrorValue, 'Failed to load repository summary.')
-            : repoInfoError
-              ? getErrorMessage(repoInfoErrorValue, 'Failed to load repo details.')
-              : undefined
-        }
-        repoInfo={repoInfo}
-        repoSummary={repoSummary}
-        repoInfoTarget={
-          repoInfoTarget
-            ? { name: repoInfoTarget.name, owner: repoInfoTarget.owner }
-            : undefined
-        }
-      />
     </Sidebar>
   );
 }

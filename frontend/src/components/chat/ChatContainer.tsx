@@ -31,7 +31,7 @@ export default function ChatContainer({
     }
   }, [messages, isThinking, sendError]);
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-6 px-4 sm:px-6">
+    <div className="mx-auto w-full max-w-5xl space-y-6 px-2.5 sm:px-6">
       {historyLoading && (
         <div className="flex flex-col gap-6 px-4 py-6">
           {/* Sent */}
@@ -78,15 +78,6 @@ export default function ChatContainer({
               <Skeleton className="h-4 w-[110%]" />
             </div>
           </div>
-          {/* Received */}
-          {/* <div className="flex items-start gap-3">
-            <Skeleton className="h-7 w-7 rounded-full shrink-0" />
-            <div className="flex flex-col gap-2 w-[72%] sm:w-[62%] md:w-[56%]">
-              <Skeleton className="h-4 w-[85%]" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-[70%]" />
-            </div>
-          </div> */}
         </div>
       )}
 

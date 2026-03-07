@@ -74,28 +74,36 @@ export default function NewChat() {
   }, []);
 
   return (
-    <section className="relative isolate mx-auto flex h-full w-full items-center justify-center px-6 py-10 sm:px-8 lg:px-10">
-      <FloatingBlob numberOfBlobs={4} />
-      <div className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(to_right,rgba(100,116,139,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(100,116,139,0.08)_1px,transparent_1px)] bg-[size:56px_56px] [mask-image:radial-gradient(ellipse_75%_55%_at_50%_35%,#000_55%,transparent_100%)] dark:bg-[linear-gradient(to_right,rgba(148,163,184,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.12)_1px,transparent_1px)]" />
+    <section className="relative isolate mx-auto flex h-full w-full min-h-0 items-center justify-center overflow-x-hidden px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
+      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+        <div className="sm:hidden opacity-75">
+          <FloatingBlob numberOfBlobs={4} />
+        </div>
+        <div className="hidden sm:block">
+          <FloatingBlob numberOfBlobs={4} />
+        </div>
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(100,116,139,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(100,116,139,0.08)_1px,transparent_1px)] bg-[size:56px_56px] [mask-image:radial-gradient(ellipse_75%_55%_at_50%_35%,#000_55%,transparent_100%)] dark:bg-[linear-gradient(to_right,rgba(148,163,184,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.12)_1px,transparent_1px)]" />
+      </div>
 
-      <div className="relative z-10 w-full max-w-6xl">
-        <div className="mx-auto max-w-4xl text-center">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-semibold leading-tight text-slate-900 dark:text-slate-100">
+      <div className="relative z-10 w-full max-w-6xl min-w-0">
+        <div className="mx-auto w-full max-w-4xl text-center">
+          <h1 className="break-words text-3xl font-semibold leading-tight text-slate-900 dark:text-slate-100 sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl">
             {welcomeHeadline}
           </h1>
         </div>
 
         <form
           onSubmit={handleCreateChat}
-          className="mx-auto mt-8 w-full max-w-2xl rounded-2xl border border-slate-200/80 bg-white/95 p-5 shadow-[0_16px_40px_-24px_rgba(15,23,42,0.35)] backdrop-blur-sm sm:p-6 dark:border-slate-800 dark:bg-slate-950/85 dark:shadow-[0_16px_40px_-24px_rgba(0,0,0,0.8)]"
+          className="mx-auto mt-6 w-full max-w-2xl rounded-2xl border border-slate-200/80 bg-white/95 p-4 shadow-[0_16px_40px_-24px_rgba(15,23,42,0.35)] backdrop-blur-sm sm:mt-8 sm:p-6 dark:border-slate-800 dark:bg-slate-950/85 dark:shadow-[0_16px_40px_-24px_rgba(0,0,0,0.8)]"
         >
-          <div className="mb-4">
-            <h2 className="text-lg font-mono text-slate-900 dark:text-slate-100">Use any public GitHub repository URL.</h2>
+          <div className="mb-4 text-center sm:text-left">
+            <h2 className="break-words text-sm font-medium text-slate-900 dark:text-slate-100 sm:text-base">
+              Use any public GitHub repository URL.
+            </h2>
           </div>
 
-          <div className="flex gap-2.5">
-            {/* URL input */}
-            <div className="relative flex-1">
+          <div className="flex flex-col gap-3 md:flex-row md:items-stretch md:gap-2.5">
+            <div className="w-full min-w-0 md:flex-1">
               <Input
                 id="repo-url"
                 value={repoUrl}
@@ -105,11 +113,10 @@ export default function NewChat() {
                 }}
                 placeholder="https://github.com/owner/repository"
                 disabled={isCreating}
-                className="h-12 rounded-2xl border border-slate-200 bg-slate-50 pl-4 pr-4 text-sm text-slate-800 placeholder:text-slate-300 shadow-none transition-all duration-200 focus-visible:border-slate-400 focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-slate-100 disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus-visible:border-slate-600 dark:focus-visible:bg-slate-800 dark:focus-visible:ring-slate-800/60"
+                className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-800 placeholder:text-slate-300 shadow-none transition-all duration-200 focus-visible:border-purple-500/60 focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-purple-500/20 focus-visible:shadow-[0_20px_60px_-12px_rgba(147,51,234,0.25)] disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus-visible:border-purple-400/60 dark:focus-visible:bg-slate-800 dark:focus-visible:ring-purple-400/20 dark:focus-visible:shadow-[0_20px_60px_-12px_rgba(147,51,234,0.3)] sm:h-12"
               />
             </div>
 
-            {/* Branch input — fixed width */}
             <Input
               id="repo-branch"
               value={repoBranch}
@@ -117,20 +124,20 @@ export default function NewChat() {
                 setRepoBranch(e.target.value);
                 if (error) setError('');
               }}
-              placeholder="branch "
+              placeholder="branch"
               disabled={isCreating}
-              className="h-12 w-28 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-800 placeholder:text-slate-300 shadow-none transition-all duration-200 focus-visible:border-slate-400 focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-slate-100 disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus-visible:border-slate-600 dark:focus-visible:bg-slate-800 dark:focus-visible:ring-slate-800/60"
+              className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-800 placeholder:text-slate-300 shadow-none transition-all duration-200 focus-visible:border-purple-500/60 focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-purple-500/20 focus-visible:shadow-[0_20px_60px_-12px_rgba(147,51,234,0.25)] disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus-visible:border-purple-400/60 dark:focus-visible:bg-slate-800 dark:focus-visible:ring-purple-400/20 dark:focus-visible:shadow-[0_20px_60px_-12px_rgba(147,51,234,0.3)] sm:h-12 md:w-28"
             />
-            {/* Submit button */}
+
             <Button
               type="submit"
               disabled={isCreating}
-              className="h-12 gap-2 rounded-2xl bg-slate-900 px-5 text-sm font-semibold text-white transition-all transform-gpu duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 hover:bg-slate-700 hover:shadow-lg hover:shadow-slate-900/20 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 dark:hover:shadow-white/10"
+              className="h-11 w-full gap-2 rounded-2xl bg-slate-900 px-5 text-sm font-semibold text-white transition-all transform-gpu duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 hover:bg-slate-700 hover:shadow-lg hover:shadow-slate-900/20 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 dark:hover:shadow-white/10 sm:h-12 md:w-auto"
             >
               {isCreating ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Creating…</span>
+                  <span>Creating...</span>
                 </>
               ) : (
                 <>
@@ -148,8 +155,11 @@ export default function NewChat() {
             </div>
           )}
 
-          <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-            Example: <span className="font-mono text-slate-700 dark:text-slate-300">https://github.com/vercel/next.js | main</span>
+          <p className="mt-3 break-words text-xs text-slate-500 dark:text-slate-400">
+            Example:{' '}
+            <span className="font-mono text-slate-700 dark:text-slate-300">
+              https://github.com/vercel/next.js | main
+            </span>
           </p>
         </form>
       </div>

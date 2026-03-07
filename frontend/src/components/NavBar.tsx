@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import { Button } from './ui/button';
+import { SidebarTrigger } from './ui/sidebar';
 import { useChatStore } from '../store/chat.store';
 import {
   useDeleteRepo,
@@ -30,16 +31,18 @@ import {
   useSummarizeRepo,
 } from '../features/repo/repos.hooks';
 import { useClearChat } from '../features/chat/chat.hooks';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { RepoStructurePanel } from './RepoStructurePanel';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import MarkdownRenderer from './chat/MarkdownRenderer';
 import { getErrorMessage } from '../lib/getErrorMessage';
+import { useIsMobile } from '../lib/hooks/use-mobile';
 
 export default function Navbar() {
   const { data: user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const isMobile = useIsMobile();
   const { activeChatId: activeChat, setActiveChatId, setRepoInfoOpen, setRepoInfoTarget } = useChatStore();
   const { data: repos } = useGetRepos();
   const ingestRepoMutation = useIngestRepo();
@@ -139,12 +142,27 @@ export default function Navbar() {
   };
 
   const isIndexing = indexStatus === 'running';
+  const isNewChatPage = location.pathname === '/chat/new';
+  const username = user?.username ?? 'there';
+  const mobileGreetings = useMemo(
+    () => [`Hi, ${username}`, `Welcome back, ${username}`, `Ready to start, ${username}?`],
+    [username]
+  );
+  const [greetingIndex, setGreetingIndex] = useState(0);
 
   useEffect(() => {
     setShowSummaryPanel(false);
     setShowStructurePanel(false);
     resetSummary();
   }, [activeRepo?._id, resetSummary]);
+
+  useEffect(() => {
+    if (!isNewChatPage || mobileGreetings.length < 2) return;
+    const timer = window.setInterval(() => {
+      setGreetingIndex((current) => (current + 1) % mobileGreetings.length);
+    }, 3600);
+    return () => window.clearInterval(timer);
+  }, [isNewChatPage, mobileGreetings.length]);
 
   if (!user) {
     return (
@@ -178,23 +196,49 @@ export default function Navbar() {
     );
   }
 
+  if (isNewChatPage) {
+    return (
+      <nav className="relative z-30 h-16 border-b border-gray-200 dark:border-gray-800 bg-[#f5f7fb] dark:bg-black flex items-center justify-between px-3 sm:px-4 md:hidden">
+        <div className="flex min-w-0 items-center gap-2">
+          <SidebarTrigger className="size-9 rounded-lg text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800" />
+          <div className="hidden sm:flex items-center gap-2">
+            <Logo className="h-8 w-8" />
+            <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">RepoHarbor</span>
+          </div>
+        </div>
+
+        <div className="absolute left-1/2 -translate-x-1/2 sm:hidden">
+          <span className="inline-flex max-w-[62vw] truncate rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+            {mobileGreetings[greetingIndex]}
+          </span>
+        </div>
+
+        <AnimatedThemeToggler className="inline-flex h-8 w-8 shrink-0 items-center justify-center transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100" />
+      </nav>
+    );
+  }
+
   return (
-    <nav className="relative z-30 h-16 border-b border-gray-200 dark:border-gray-800 bg-[#f5f7fb] dark:bg-black flex items-center justify-between px-6">
-      <div className="absolute left-1/2 -translate-x-1/2">
+    <nav className="relative z-30 h-16 border-b border-gray-200 dark:border-gray-800 bg-[#f5f7fb] dark:bg-black flex items-center justify-between px-3 sm:px-4 md:px-6">
+      <div className="flex items-center md:hidden">
+        <SidebarTrigger className="size-9 rounded-lg text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 md:hidden" />
+      </div>
+
+      <div className="absolute left-1/2 max-w-[min(72vw,22rem)] -translate-x-1/2 sm:max-w-[min(58vw,28rem)]">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="flex items-center gap-2 text-sm font-medium transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100"
+              className="inline-flex max-w-full items-center gap-1.5 px-2 sm:px-3 text-sm font-medium transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100"
               disabled={!activeRepo}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex min-w-0 items-center gap-2 sm:gap-3">
                 <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                <div>
-                  <p className="text-sm font-medium text-slate-900 dark:text-white">
+                <div className="min-w-0 max-w-[min(50vw,14rem)] sm:max-w-[min(40vw,18rem)]">
+                  <p className="truncate text-sm font-medium text-slate-900 dark:text-white">
                     {activeRepo?.name || 'Repository Chat'}
                   </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="hidden text-xs text-slate-500 dark:text-slate-400 sm:block">
                     {indexStatus === 'running'
                       ? 'Indexing in progress'
                       : indexStatus === 'failed'
@@ -205,7 +249,7 @@ export default function Navbar() {
                   </p>
                 </div>
               </div>
-              <ChevronDown className="h-4 w-4" />
+              <ChevronDown className="h-4 w-4 shrink-0" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="center" className="w-56">
@@ -308,37 +352,43 @@ export default function Navbar() {
         )}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="ml-auto flex items-center gap-1.5 sm:gap-2 md:ml-0">
         <Button
           onClick={handleIngestRepo}
           disabled={isIndexing || ingestRepoMutation.isPending}
           variant={isChatReady ? 'outline' : 'default'}
           size="sm"
-          className={`flex items-center justify-center leading-none transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 ${isChatReady
+          className={`h-9 min-w-9 px-2 sm:px-3 flex items-center justify-center leading-none transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 ${isChatReady
               ? 'border-slate-300 dark:border-slate-700'
               : ''
             }`}
         >
           {isIndexing ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Indexing...
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span className="hidden sm:inline sm:ml-2">Indexing...</span>
             </>
           ) : indexStatus === 'failed' ? (
-            'Retry'
+            <>
+              <RotateCcw className="h-4 w-4" />
+              <span className="hidden sm:inline sm:ml-2">Retry</span>
+            </>
           ) : isChatReady ? (
             <>
-              <RotateCcw className="mr-2 h-4 w-4" />
-              Reindex
+              <RotateCcw className="h-4 w-4" />
+              <span className="hidden sm:inline sm:ml-2">Reindex</span>
             </>
           ) : (
-            'Index Repository'
+            <>
+              <Sparkles className="h-4 w-4" />
+              <span className="hidden sm:inline sm:ml-2">Index Repository</span>
+            </>
           )}
         </Button>
 
-        <TooltipProvider delayDuration={150}>
-          <Tooltip>
-            <TooltipTrigger asChild>
+        {isMobile ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
               <button
                 type="button"
                 aria-label="index info"
@@ -346,24 +396,49 @@ export default function Navbar() {
               >
                 <Info className="h-4 w-4" />
               </button>
-            </TooltipTrigger>
-            {isChatReady && (
-              <TooltipContent sideOffset={6} className="max-w-64 bg-slate-900 text-slate-100 dark:bg-slate-100 dark:text-slate-900">
-                Reindex to update embeddings with the latest changes from the repository.
-              </TooltipContent>
-            )}
-            {!isChatReady && (
-              <TooltipContent sideOffset={6} className="max-w-64 bg-slate-900 text-slate-100 dark:bg-slate-100 dark:text-slate-900">
-                Indexing the repository will extract information and generate embeddings to enable chat functionality. The first indexing may take a few minutes depending on the repository size.
-              </TooltipContent>
-            )}
-          </Tooltip>
-        </TooltipProvider>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              side="bottom"
+              sideOffset={6}
+              collisionPadding={8}
+              className="max-w-64 text-xs leading-relaxed"
+            >
+              {isChatReady
+                ? 'Reindex to update embeddings with the latest changes from the repository.'
+                : 'Indexing the repository will extract information and generate embeddings to enable chat functionality. The first indexing may take a few minutes depending on the repository size.'}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <TooltipProvider delayDuration={150}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="index info"
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-full text-slate-500 transform-gpu transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                >
+                  <Info className="h-4 w-4" />
+                </button>
+              </TooltipTrigger>
+              {isChatReady && (
+                <TooltipContent sideOffset={6} className="max-w-64 bg-slate-900 text-slate-100 dark:bg-slate-100 dark:text-slate-900">
+                  Reindex to update embeddings with the latest changes from the repository.
+                </TooltipContent>
+              )}
+              {!isChatReady && (
+                <TooltipContent sideOffset={6} className="max-w-64 bg-slate-900 text-slate-100 dark:bg-slate-100 dark:text-slate-900">
+                  Indexing the repository will extract information and generate embeddings to enable chat functionality. The first indexing may take a few minutes depending on the repository size.
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
+        )}
       </div>
-      <div className="flex items-center">
+      <div className="hidden items-center md:flex">
         {activeRepo && (
-          <span className="inline-flex items-center rounded-md bg-slate-200 px-2 py-1 text-xs text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-            Branch: {activeRepo.branch ?? 'main'}
+          <span className="inline-flex max-w-[16rem] items-center rounded-md bg-slate-200 px-2 py-1 text-xs text-slate-700 dark:bg-slate-800 dark:text-slate-300 lg:max-w-[20rem]">
+            <span className="truncate">Branch: {activeRepo.branch ?? 'main'}</span>
           </span>
         )}
       </div>

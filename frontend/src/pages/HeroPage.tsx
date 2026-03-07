@@ -167,7 +167,15 @@ export default function Hero() {
             <form onSubmit={handleCreateChat} className="w-full max-w-3xl mx-auto mb-5 sm:mb-6">
               {/* Mobile: stacked */}
               <div className="flex flex-col sm:hidden gap-3">
-                <div className="flex items-center gap-3 px-4 py-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div
+                  className="flex items-center gap-3 px-4 py-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-[box-shadow,border-color] duration-200"
+                  style={{
+                    borderColor: urlFocused ? 'rgba(147,51,234,0.5)' : undefined,
+                    boxShadow: urlFocused
+                      ? '0 0 0 3px rgba(147,51,234,0.2), 0 20px 60px -12px rgba(147,51,234,0.25)'
+                      : undefined,
+                  }}
+                >
                   <Github className={`w-4 h-4 shrink-0 transition-colors duration-200 ${urlFocused || repoUrl ? 'text-purple-500' : 'text-slate-400'}`} />
                   <input
                     type="text"
@@ -179,7 +187,15 @@ export default function Hero() {
                     className="flex-1 min-w-0 bg-transparent border-none outline-none text-slate-900 dark:text-white placeholder:text-slate-400 text-sm"
                   />
                 </div>
-                <div className="flex items-center gap-3 px-4 py-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div
+                  className="flex items-center gap-3 px-4 py-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-[box-shadow,border-color] duration-200"
+                  style={{
+                    borderColor: branchFocused ? 'rgba(147,51,234,0.5)' : undefined,
+                    boxShadow: branchFocused
+                      ? '0 0 0 3px rgba(147,51,234,0.2), 0 20px 60px -12px rgba(147,51,234,0.25)'
+                      : undefined,
+                  }}
+                >
                   <GitBranch className={`w-4 h-4 shrink-0 transition-colors duration-200 ${branchFocused || repoBranch ? 'text-purple-500' : 'text-slate-400'}`} />
                   <input
                     type="text"

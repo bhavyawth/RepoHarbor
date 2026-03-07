@@ -1,5 +1,5 @@
 // layouts/AppLayout.tsx
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../features/auth/auth.hooks';
 import Navbar from '../components/NavBar';
 import SideBar from '../components/SideBar';
@@ -7,11 +7,33 @@ import { SidebarInset, SidebarProvider } from '../components/ui/sidebar';
 import { useChatStore } from '../store/chat.store';
 import { useEffect, useState } from 'react';
 import GlobalChatSearchModal from '../components/chat/GlobalChatSearchModal';
+import { RepoInfoSheet } from '../components/RepoInfoSheet';
+import { useRepoDetails } from '../features/github/github.hooks';
+import { useRepoSummary } from '../features/repo/repos.hooks';
+import { getErrorMessage } from '../lib/getErrorMessage';
 
 export default function AppLayout() {
   const { data: user } = useAuth();
-  const { activeChatId } = useChatStore();
+  const { activeChatId, repoInfoOpen, setRepoInfoOpen, repoInfoTarget, setRepoInfoTarget } = useChatStore();
+  const location = useLocation();
   const [searchOpen, setSearchOpen] = useState(false);
+  const isNewChatRoute = location.pathname === '/chat/new';
+  const {
+    data: repoInfo,
+    isLoading: repoInfoLoading,
+    isError: repoInfoError,
+    error: repoInfoErrorValue,
+  } = useRepoDetails(
+    repoInfoTarget?.owner ?? '',
+    repoInfoTarget?.name ?? '',
+    repoInfoOpen && !!repoInfoTarget
+  );
+  const {
+    data: repoSummary,
+    isLoading: repoSummaryLoading,
+    isError: repoSummaryError,
+    error: repoSummaryErrorValue,
+  } = useRepoSummary(repoInfoOpen && !!repoInfoTarget ? repoInfoTarget?._id : undefined);
 
   const sidebarOpen = localStorage.getItem("sidebarOpen");
 
@@ -26,6 +48,12 @@ export default function AppLayout() {
     window.addEventListener('keydown', handleSearchShortcut);
     return () => window.removeEventListener('keydown', handleSearchShortcut);
   }, [user]);
+
+  useEffect(() => {
+    if (!repoInfoOpen) {
+      setRepoInfoTarget(null);
+    }
+  }, [repoInfoOpen, setRepoInfoTarget]);
 
   if (!user) {
     return (
@@ -42,13 +70,33 @@ export default function AppLayout() {
         <SideBar onOpenSearch={() => setSearchOpen(true)} />
         <SidebarInset className="flex min-w-0 flex-1">
           <div className="flex min-h-0 flex-1 flex-col">
-            {activeChatId && <Navbar />}
+            {(activeChatId || isNewChatRoute) && <Navbar />}
             <main className="flex-1 overflow-y-auto">
               <Outlet />
             </main>
           </div>
         </SidebarInset>
         <GlobalChatSearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
+        <RepoInfoSheet
+          repoInfoOpen={repoInfoOpen}
+          setRepoInfoOpen={setRepoInfoOpen}
+          repoInfoLoading={repoSummaryLoading || repoInfoLoading}
+          repoInfoError={repoSummaryError || repoInfoError}
+          repoInfoErrorMessage={
+            repoSummaryError
+              ? getErrorMessage(repoSummaryErrorValue, 'Failed to load repository summary.')
+              : repoInfoError
+                ? getErrorMessage(repoInfoErrorValue, 'Failed to load repo details.')
+                : undefined
+          }
+          repoInfo={repoInfo}
+          repoSummary={repoSummary}
+          repoInfoTarget={
+            repoInfoTarget
+              ? { name: repoInfoTarget.name, owner: repoInfoTarget.owner }
+              : undefined
+          }
+        />
       </div>
     </SidebarProvider>
   );
