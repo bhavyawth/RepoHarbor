@@ -52,18 +52,21 @@ export const githubCallback = async (req: Request, res: Response) => {
       user.email = primaryEmail;
       await user.save();
     }
+    const isProd = process.env.NODE_ENV === 'production';
     const accessToken = generateAccessJwtToken(user);
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
+      path: '/',
       maxAge: Number(process.env.ACCESS_JWT_EXPIRATION)*24*60*60*1000, // in ms
     })
     const refreshToken = generateRefreshJwtToken(user);
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
+      path: '/',
       maxAge: Number(process.env.REFRESH_JWT_EXPIRATION)*24*60*60*1000, // in ms
     });    
     return res.redirect(`${FRONTEND_URL}`);

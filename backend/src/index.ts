@@ -14,8 +14,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.set("trust proxy", 1);
 app.use(cors({
-  origin: '*',
+  origin: 'https://repo-harbor.vercel.app',
   credentials: true,
 }));
 app.use(express.json());
@@ -25,7 +26,12 @@ app.use(
     secret: process.env.SESSION_SECRET!,
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false, httpOnly: true, maxAge: 7*24*60*60*1000 },
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      sameSite: "none",
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    }
   })
 );
 app.use(passport.initialize());

@@ -11,15 +11,15 @@ export interface User {
 
 export const authApi = {
   getMe: async (): Promise<User> => {
-    const { data } = await api.get('/auth/me');
+    const { data } = await api.get('/auth/me', { withCredentials: true });
     return data.user;
   },
 
   logout: async (): Promise<void> => {
-    await api.post('/auth/logout');
+    await api.post('/auth/logout', { withCredentials: true });
   },
 
   refreshToken: async (): Promise<void> => {
-    await api.get('/auth/refresh-token');
+    await api.get('/auth/refresh-token', { withCredentials: true });
   },
 };
