@@ -70,9 +70,10 @@ export default function Navbar() {
     isError: repoStructureError,
     error: repoStructureErrorValue,
   } = useRepoStructure(showStructurePanel ? activeRepo?._id : undefined);
-
+  const baseUrl = import.meta.env.VITE_API_URL;
+  
   const handleGithubLogin = () => {
-    window.location.href = `http://localhost:3000/api/auth/github`;
+    window.location.href = `${baseUrl}/auth/github`;
   };
 
   const handleFeatureScroll = () => {

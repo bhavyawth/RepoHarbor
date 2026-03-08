@@ -65,9 +65,9 @@ export default function Hero() {
   const registerRepoMutation = useRegisterRepo();
   const topRef = useRef<HTMLDivElement>(null);
   const [showTyping, setShowTyping] = useState(false);
-
+  const baseUrl = import.meta.env.VITE_API_URL;
   const handleGithubLogin = () => {
-    window.location.href = `http://localhost:3000/api/auth/github`;
+    window.location.href = `${baseUrl}/auth/github`;
   };
 
   const handleCreateChat = async (e: FormEvent) => {
@@ -79,7 +79,7 @@ export default function Hero() {
     }
     setError('');
     try {
-      await axios.get('http://localhost:3000/api/auth/me', { withCredentials: true });
+      await axios.get(`${baseUrl}/auth/me`, { withCredentials: true });
       const chat = await registerRepoMutation.mutateAsync({
         repoUrl: normalizedRepoUrl,
         branch: repoBranch.trim(),
@@ -92,7 +92,7 @@ export default function Hero() {
       if (status === 401) {
         localStorage.setItem('pendingRepoUrl', normalizedRepoUrl);
         localStorage.setItem('pendingRepoBranch', repoBranch.trim());
-        window.location.href = 'http://localhost:3000/api/auth/github';
+        window.location.href = `${baseUrl}/auth/github`;
         return;
       }
       setError(getErrorMessage(err, 'Failed to create chat. Please check the repository and try again.'));
