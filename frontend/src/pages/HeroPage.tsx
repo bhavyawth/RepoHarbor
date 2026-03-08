@@ -123,8 +123,8 @@ export default function Hero() {
       <div ref={topRef} id="topdiv" />
       <FloatingBlob />
       {/* Backgrounds */}
-      <div className="absolute inset-0 bg-gradient-to-b from-purple-50/50 via-transparent to-blue-50/30 dark:from-purple-950/10 dark:via-transparent dark:to-blue-950/10 pointer-events-none" />
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#8882_1px,transparent_1px),linear-gradient(to_bottom,#8882_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-indigo-100/60 via-transparent to-violet-50/40 dark:from-indigo-950/10 dark:via-transparent dark:to-blue-950/10 pointer-events-none" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#6366f133_1px,transparent_1px),linear-gradient(to_bottom,#6366f133_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)] dark:bg-[linear-gradient(to_right,#8882_1px,transparent_1px),linear-gradient(to_bottom,#8882_1px,transparent_1px)] pointer-events-none" />
       {/* ── Hero ── */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32 pb-16 sm:pb-24">
         <div className="text-center max-w-4xl mx-auto">
@@ -134,10 +134,10 @@ export default function Hero() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4, delay: 0.1 }}
-              className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2.5 rounded-full bg-purple-100 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 text-xs sm:text-sm font-medium mb-5 sm:mb-6 border border-purple-200 dark:border-purple-800"
+              className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-300 text-xs sm:text-sm font-medium mb-5 sm:mb-6 border border-indigo-200 dark:border-indigo-800/60"
             >
               <Code2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-              <span>AI-Powered Code Understanding</span>
+              <span>Semantic search over your entire codebase</span>
             </motion.div>
             {/* Heading */}
             <h1 className="text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight mb-4 lg:mb-6 xl:mb-6 w-full break-words">
@@ -171,13 +171,13 @@ export default function Hero() {
                 <div
                   className="flex items-center gap-3 px-4 py-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-[box-shadow,border-color] duration-200"
                   style={{
-                    borderColor: urlFocused ? 'rgba(147,51,234,0.5)' : undefined,
+                    borderColor: urlFocused ? 'rgba(99,102,241,0.5)' : undefined,
                     boxShadow: urlFocused
-                      ? '0 0 0 3px rgba(147,51,234,0.2), 0 20px 60px -12px rgba(147,51,234,0.25)'
+                      ? '0 0 0 3px rgba(99,102,241,0.2), 0 20px 60px -12px rgba(129,140,248,0.25)'
                       : undefined,
                   }}
                 >
-                  <Github className={`w-4 h-4 shrink-0 transition-colors duration-200 ${urlFocused || repoUrl ? 'text-purple-500' : 'text-slate-400'}`} />
+                  <Github className={`w-4 h-4 shrink-0 transition-colors duration-200 ${urlFocused || repoUrl ? 'text-indigo-400' : 'text-slate-400'}`} />
                   <input
                     type="text"
                     value={repoUrl}
@@ -191,13 +191,13 @@ export default function Hero() {
                 <div
                   className="flex items-center gap-3 px-4 py-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-[box-shadow,border-color] duration-200"
                   style={{
-                    borderColor: branchFocused ? 'rgba(147,51,234,0.5)' : undefined,
+                    borderColor: branchFocused ? 'rgba(99,102,241,0.5)' : undefined,
                     boxShadow: branchFocused
-                      ? '0 0 0 3px rgba(147,51,234,0.2), 0 20px 60px -12px rgba(147,51,234,0.25)'
+                      ? '0 0 0 3px rgba(99,102,241,0.2), 0 20px 60px -12px rgba(129,140,248,0.25)'
                       : undefined,
                   }}
                 >
-                  <GitBranch className={`w-4 h-4 shrink-0 transition-colors duration-200 ${branchFocused || repoBranch ? 'text-purple-500' : 'text-slate-400'}`} />
+                  <GitBranch className={`w-4 h-4 shrink-0 transition-colors duration-200 ${branchFocused || repoBranch ? 'text-indigo-400' : 'text-slate-400'}`} />
                   <input
                     type="text"
                     value={repoBranch}
@@ -211,7 +211,7 @@ export default function Hero() {
                 <button
                   type="submit"
                   disabled={registerRepoMutation.isPending}
-                  className="w-full flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-semibold text-sm rounded-xl transition-all transform-gpu duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 disabled:opacity-60 disabled:cursor-not-allowed shadow-md"
+                  className="w-full flex items-center justify-center gap-2 py-3.5 bg-gradient-to-b from-indigo-400 to-indigo-600 hover:from-indigo-300 hover:to-indigo-500 text-white font-semibold text-sm rounded-xl transition-all transform-gpu duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 disabled:opacity-60 disabled:cursor-not-allowed shadow-md"
                 >
                   {registerRepoMutation.isPending ? (
                     <><Loader2 className="w-4 h-4 animate-spin" /><span>Creating…</span></>
@@ -220,21 +220,22 @@ export default function Hero() {
                   )}
                 </button>
               </div>
+
               {/* Desktop: single-line pill */}
               <div className="hidden sm:block">
                 <motion.div
                   animate={{
                     boxShadow: isFormActive
-                      ? '0 0 0 3px rgba(147,51,234,0.2), 0 20px 60px -12px rgba(147,51,234,0.25)'
+                      ? '0 0 0 3px rgba(99,102,241,0.2), 0 20px 60px -12px rgba(129,140,248,0.25)'
                       : '0 4px 24px -4px rgba(0,0,0,0.15)',
                   }}
                   transition={{ duration: 0.2 }}
                   className="flex items-center gap-2 p-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/60 rounded-full"
-                  style={{ borderColor: isFormActive ? 'rgba(147,51,234,0.5)' : undefined }}
+                  style={{ borderColor: isFormActive ? 'rgba(99,102,241,0.5)' : undefined }}
                 >
                   {/* URL input */}
                   <div className="flex items-center gap-2.5 flex-1 min-w-0 pl-4">
-                    <Github className={`w-4 h-4 shrink-0 transition-colors duration-200 ${urlFocused || repoUrl ? 'text-purple-500' : 'text-slate-400'}`} />
+                    <Github className={`w-4 h-4 shrink-0 transition-colors duration-200 ${urlFocused || repoUrl ? 'text-indigo-400' : 'text-slate-400'}`} />
                     <input
                       type="text"
                       value={repoUrl}
@@ -249,7 +250,7 @@ export default function Hero() {
                   <div className="w-px h-5 bg-slate-200 dark:bg-slate-700 shrink-0" />
                   {/* Branch input */}
                   <div className="flex items-center gap-2.5 w-44 pl-3">
-                    <GitBranch className={`w-4 h-4 shrink-0 transition-colors duration-200 ${branchFocused || repoBranch ? 'text-purple-500' : 'text-slate-400'}`} />
+                    <GitBranch className={`w-4 h-4 shrink-0 transition-colors duration-200 ${branchFocused || repoBranch ? 'text-indigo-400' : 'text-slate-400'}`} />
                     <input
                       type="text"
                       value={repoBranch}
@@ -264,7 +265,7 @@ export default function Hero() {
                   <button
                     type="submit"
                     disabled={registerRepoMutation.isPending}
-                    className="group/btn shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-semibold text-sm rounded-full transition-all transform-gpu duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
+                    className="group/btn shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-b from-indigo-400 to-indigo-600 hover:from-indigo-300 hover:to-indigo-500 text-white font-semibold text-sm rounded-full transition-all transform-gpu duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
                   >
                     {registerRepoMutation.isPending ? (
                       <><Loader2 className="w-4 h-4 animate-spin" /><span>Creating…</span></>
@@ -274,6 +275,7 @@ export default function Hero() {
                   </button>
                 </motion.div>
               </div>
+
               {/* Error */}
               <AnimatePresence>
                 {error && (
@@ -310,7 +312,7 @@ export default function Hero() {
           className="mt-14 sm:mt-20 max-w-5xl mx-auto"
         >
           <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl bg-white dark:bg-slate-900">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-blue-500/5 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-violet-500/5 pointer-events-none" />
             {/* Browser chrome */}
             <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-sm">
               <div className="flex gap-1.5 shrink-0">
@@ -320,7 +322,7 @@ export default function Hero() {
               </div>
               <div className="flex-1 flex justify-center">
                 <div className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md px-3 py-1 text-xs text-slate-500 dark:text-slate-400 font-mono max-w-[180px] w-full justify-center">
-                  <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse shrink-0" />
+                  <div className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse shrink-0" />
                   <span className="truncate">repoharbor</span>
                 </div>
               </div>
@@ -336,11 +338,11 @@ export default function Hero() {
                   className={`flex gap-2 sm:gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
                 >
                   {msg.role === 'user' ? (
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 shrink-0 flex items-center justify-center text-white text-xs font-bold">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-b from-indigo-400 to-indigo-600 shrink-0 flex items-center justify-center text-white text-xs font-bold">
                       Y
                     </div>
                   ) : (
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 shrink-0 flex items-center justify-center">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-b from-indigo-400 to-indigo-600 shrink-0 flex items-center justify-center">
                       <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                     </div>
                   )}
@@ -349,7 +351,7 @@ export default function Hero() {
                       {msg.role === 'user' ? 'You' : 'RepoHarbor AI'}
                     </span>
                     {msg.role === 'user' ? (
-                      <div className="bg-gradient-to-br from-purple-600 to-blue-600 text-white rounded-2xl rounded-tr-sm px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm leading-relaxed shadow-sm">
+                      <div className="bg-gradient-to-b from-indigo-400 to-indigo-600 text-white rounded-2xl rounded-tr-sm px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm leading-relaxed shadow-sm">
                         {msg.content}
                       </div>
                     ) : (
@@ -370,7 +372,7 @@ export default function Hero() {
                     transition={{ duration: 0.3 }}
                     className="flex gap-2 sm:gap-3"
                   >
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 shrink-0 flex items-center justify-center">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-b from-indigo-400 to-indigo-600 shrink-0 flex items-center justify-center">
                       <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                     </div>
                     <div className="flex flex-col gap-1 items-start">
@@ -412,10 +414,10 @@ export default function Hero() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="group relative p-5 sm:p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-purple-300 dark:hover:border-purple-700 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+                className="group relative p-5 sm:p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
               >
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-950/50 dark:to-blue-950/50 flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-200">
-                  <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 dark:text-purple-400" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-b from-indigo-50 to-indigo-100 dark:from-indigo-950/50 dark:to-indigo-900/30 flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-200">
+                  <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-500 dark:text-indigo-400" />
                 </div>
                 <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white mb-1.5 sm:mb-2">
                   {feature.title}
@@ -435,7 +437,7 @@ export default function Hero() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-purple-800 to-blue-900 p-6 sm:p-8 lg:p-10"
+          className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-b from-indigo-700 to-indigo-900 p-6 sm:p-8 lg:p-10"
         >
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#fff2_1px,transparent_1px),linear-gradient(to_bottom,#fff2_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
           <div className="relative z-10 grid items-center gap-6 lg:grid-cols-2">
@@ -443,12 +445,12 @@ export default function Hero() {
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3">
                 Ready to chat with your code?
               </h2>
-              <p className="text-sm sm:text-base text-purple-100 mb-5 sm:mb-6 max-w-2xl mx-auto lg:mx-0">
+              <p className="text-sm sm:text-base text-indigo-200 mb-5 sm:mb-6 max-w-2xl mx-auto lg:mx-0">
                 Join developers who are already using RepoHarbor to understand codebases faster.
               </p>
               <button
                 onClick={handleGithubLogin}
-                className="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 bg-white text-purple-600 rounded-lg font-semibold text-sm sm:text-base hover:bg-purple-50 transition-all transform-gpu duration-150 hover:scale-[1.02] active:scale-[0.98] shadow-xl"
+                className="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 bg-white text-indigo-600 rounded-lg font-semibold text-sm sm:text-base hover:bg-indigo-50 transition-all transform-gpu duration-150 hover:scale-[1.02] active:scale-[0.98] shadow-xl"
               >
                 <Github className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
                 Get Started with GitHub

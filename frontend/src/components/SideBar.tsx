@@ -145,14 +145,14 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
       <SidebarHeader className="px-3 pt-3 pb-2">
         <SidebarMenu className='mb-3'>
           <SidebarMenuItem>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
               <SidebarMenuButton
                 asChild
                 size="lg"
                 tooltip="RepoHarbor"
                 className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
               >
-                <div className="group/logo flex flex-1 items-center gap-2">
+                <div className="group/logo flex flex-1 items-center gap-2 group-data-[collapsible=icon]:justify-center">
                   <div className="relative flex aspect-square size-11 shrink-0 items-center justify-center overflow-hidden rounded-xl">
                     <Logo className="size-9" />
                     <div className="absolute inset-0 hidden items-center justify-center group-data-[collapsible=icon]:group-hover/logo:flex">
@@ -321,16 +321,16 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
                                     className="z-[80] max-w-[calc(100vw-1rem)] rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
                                     onClick={(e) => e.stopPropagation()}
                                   >
-                                    <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => handlePinRepo(chat._id)}>
+                                    <DropdownMenuItem className="transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 cursor-pointer gap-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl" onClick={() => handlePinRepo(chat._id)}>
                                       <Pin className="size-4" />
                                       {chat.isPinned ? 'Unpin' : 'Pin'}
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => handleRepoInfo(chat)}>
+                                    <DropdownMenuItem className="transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 cursor-pointer gap-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl" onClick={() => handleRepoInfo(chat)}>
                                       <Info className="size-4" />
                                       Repo Info
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
-                                      className="cursor-pointer gap-2 text-red-600 dark:text-red-400"
+                                      className="transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 hover:text-red-600 data-[highlighted]:text-red-600 cursor-pointer gap-2 text-red-600 dark:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         handleDeleteRepo(chat._id);
@@ -449,16 +449,16 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
                                     className="z-[80] max-w-[calc(100vw-1rem)] rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
                                     onClick={(e) => e.stopPropagation()}
                                   >
-                                    <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => handlePinRepo(chat._id)}>
+                                    <DropdownMenuItem className="transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 cursor-pointer gap-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl" onClick={() => handlePinRepo(chat._id)}>
                                       <Pin className="size-4" />
                                       {chat.isPinned ? 'Unpin' : 'Pin'}
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => handleRepoInfo(chat)}>
+                                    <DropdownMenuItem className="transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 cursor-pointer gap-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl" onClick={() => handleRepoInfo(chat)}>
                                       <Info className="size-4" />
                                       Repo Info
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
-                                      className="cursor-pointer gap-2 text-red-600 dark:text-red-400"
+                                      className="transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 hover:text-red-600 data-[highlighted]:text-red-600 cursor-pointer gap-2 text-red-600 dark:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         handleDeleteRepo(chat._id);
@@ -513,8 +513,8 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
                   sideOffset={6}
                   className="z-[80] w-56 max-w-[calc(100vw-1rem)] rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
                 >
-                  <DropdownMenuItem className="cursor-pointer">
-                    <div className="w-full" onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenuItem className="transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl">
+                    <div className="w-full hover:bg-transparent focus:bg-transparent data-[highlighted]:bg-transparent" onClick={(e) => e.stopPropagation()}>
                       <AnimatedThemeToggler className="flex w-full items-center gap-2">
                         <span className="items-center gap-3 px-2 pb-1">
                           Toggle Theme
@@ -524,7 +524,7 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => handleLogout()}
-                    className="cursor-pointer text-red-600 dark:text-red-400"
+                    className="transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 cursor-pointer data-[highlighted]:text-red-600  text-red-600 hover:text-red-600 dark:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl"
                   >
                     <LogOut className="mr-2 size-4" />
                     <span>Logout</span>
