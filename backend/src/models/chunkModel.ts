@@ -32,14 +32,20 @@ const ChunkSchema = new Schema(
         validator: (v: number[]) => v.length > 0,
       },
     },
+    status: {
+      type: String,
+      enum: ['pending', 'active'],
+      default: 'active',
+      required: true,
+    },
   },
   { timestamps: true }
 );
 
-ChunkSchema.index({ repoId: 1 });
-ChunkSchema.index({ repoId: 1, filePath: 1 });
+ChunkSchema.index({ repoId: 1, status: 1 });
+ChunkSchema.index({ repoId: 1, filePath: 1, status: 1 });
 ChunkSchema.index(
-  { repoId: 1, filePath: 1, chunkIndex: 1 },
+  { repoId: 1, filePath: 1, chunkIndex: 1, status: 1 },
   { unique: true }
 );
 

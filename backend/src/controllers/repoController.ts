@@ -7,6 +7,7 @@ import { findSimilarChunks, generateEmbedding, generateEmbeddingsForChunks } fro
 import { buildJsonTree, hasAllowedExtension, MAX_FILE_SIZE, shouldSkipPath, treeToPrompt } from "../utils/fileUtils";
 import { getFileContent, getRepoTree, checkBranchExists } from "../services/githubService";
 import { generateAnswer } from "../services/llm/chatCompletion";
+import { isCancelled, markCancelled, clearCancelled } from "../services/cancelRegistry";
 import ChatMsg from "../models/chatMsgModel";
 import type { RepoDocument } from "../models/repoModel";
 
@@ -19,31 +20,41 @@ const getErrorMessage = (error: unknown): string => {
 
 async function processIndexing(repo: RepoDocument): Promise<void> {
   const repoName = `${repo.owner}/${repo.name}`;
-  await Chunk.deleteMany({ repoId: repo._id });
+  const repoId = repo._id.toString();
   const treeEntries = await getRepoTree(
     repo.owner, 
-    repo.name, 
+    repo.name,
     repo.branch ?? undefined
   );
+  // ['idle', 'running', 'done', 'failed'
   const filePaths = treeEntries
     .filter((entry) => entry.type === "blob")
     .filter((entry) => !shouldSkipPath(entry.path))
     .filter((entry) => hasAllowedExtension(entry.path))
     .filter((entry) => !entry.size || entry.size <= MAX_FILE_SIZE)
     .map((entry) => entry.path);
-  if (filePaths.length === 0) {
-    throw new Error("No indexable files found in repository");
-  }
+  if (filePaths.length === 0) throw new Error("No indexable files found in repository");
   let totalChunks = 0;
   for (let i = 0; i < filePaths.length; i += INGEST_BATCH_SIZE) {
+    //cancellation happens only at boundary of batches!
+    if (isCancelled(repoId)) {
+      clearCancelled(repoId);
+      await Chunk.deleteMany({ repoId: repo._id, status: "pending" });
+      await Repo.findByIdAndUpdate(repo._id, {
+        indexStatus: "cancelled",
+        indexError: "Indexing cancelled by user",
+      });
+      // console.log(`[ingestRepo] Cancelled indexing for ${repoName}`);
+      return;
+    }
     const batchPaths = filePaths.slice(i, i + INGEST_BATCH_SIZE);
     const batchChunks: TextChunk[] = [];
     for (const filePath of batchPaths) {
       try {
         const content = await getFileContent(
-          repo.owner, 
-          repo.name, 
-          filePath, 
+          repo.owner,
+          repo.name,
+          filePath,
           repo.branch ?? undefined
         );
         const chunks = chunkText(content, repoName, filePath);
@@ -62,18 +73,23 @@ async function processIndexing(repo: RepoDocument): Promise<void> {
       startIndex: ec.startIndex,
       chunkIndex: ec.chunkIndex,
       embedding: ec.embedding,
+      status: "pending",
     }));
     await Chunk.insertMany(chunkDocs);
     totalChunks += chunkDocs.length;
   }
-  if (totalChunks === 0) {
-    throw new Error("No chunks were successfully indexed");
-  }
+  if (totalChunks === 0) throw new Error("No chunks were successfully indexed");
+  await Chunk.deleteMany({ repoId: repo._id, status: "active" });
+  await Chunk.updateMany(
+    { repoId: repo._id, status: "pending" },
+    { $set: { status: "active" } }
+  );
   await Repo.findByIdAndUpdate(repo._id, {
     indexStatus: "done",
     lastIndexedAt: new Date(),
     indexError: null,
   });
+  // console.log(`[ingestRepo] Successfully indexed ${repoName}: ${totalChunks} chunks from ${filePaths.length} files`);
 }
 // ============================================================
 // POST /repos — Register a repo
@@ -338,5 +354,16 @@ export const getRepoIndexStatus = async (req: Request, res: Response) => {
   }
 };
 
-
-//todo: have a controller for ingestion bar using websockets in future
+export const cancelIndexing = async (req: Request, res: Response) => {
+  try {
+    const { repoId } = req.params;
+    const repo = await Repo.findById(repoId);
+    if (!repo) return res.status(404).json({ message: "Repo not found" });
+    if (repo.userId.toString() !== req.user!._id.toString()) return res.status(403).json({ message: "Not authorized" });
+    if (repo.indexStatus !== "running") return res.status(400).json({ message: "Repo is not currently indexing" });
+    markCancelled(repoId);
+    return res.status(200).json({ message: "Cancellation requested" });
+  } catch (error: unknown) {
+    return res.status(500).json({ message: "Failed to cancel indexing", error: getErrorMessage(error) });
+  }
+};

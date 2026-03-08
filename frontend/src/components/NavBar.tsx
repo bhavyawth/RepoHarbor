@@ -53,7 +53,8 @@ export default function Navbar() {
 
   const activeRepo = repos?.find((repo) => repo._id === activeChat) ?? null;
   const indexStatus = activeRepo?.indexStatus ?? 'idle';
-  const isChatReady = indexStatus === 'done';
+  const isChatReady =
+    indexStatus === 'done' || (indexStatus === 'cancelled' && !!activeRepo?.lastIndexedAt);
   const clearChatMutation = useClearChat(activeRepo?._id ?? '');
   const {
     mutateAsync: summarizeRepo,
@@ -136,9 +137,7 @@ export default function Navbar() {
     if (!activeRepo || ingestRepoMutation.isPending) return;
     try {
       await ingestRepoMutation.mutateAsync(activeRepo._id);
-    } catch {
-      // Mutation errors are surfaced through existing query invalidation and status UI.
-    }
+    } catch {}
   };
 
   const isIndexing = indexStatus === 'running';

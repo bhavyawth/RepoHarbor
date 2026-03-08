@@ -2,13 +2,14 @@ import { useEffect, useMemo, useState, useRef, type FormEvent, type KeyboardEven
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { useChatStore } from '../store/chat.store';
-import { useGetRepos, useRepoIndexStatus, reposKeys } from '../features/repo/repos.hooks';
+import { useGetRepos, useRepoIndexStatus, useCancelIndexing, reposKeys } from '../features/repo/repos.hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { useChatHistory, useSendMessage } from '../features/chat/chat.hooks';
 import { Button } from '../components/ui/button';
 import ChatContainer from '../components/chat/ChatContainer';
 import IndexingTerminal from '../components/chat/IndexingTerminal';
 import { getErrorMessage } from '../lib/getErrorMessage';
+import { toast } from 'sonner';
 
 export default function ChatPage() {
   const { chatId } = useParams();
@@ -31,11 +32,12 @@ export default function ChatPage() {
   const { data: repoIndexStatus } = useRepoIndexStatus(chatId, true);
   const sendMessageMutation = useSendMessage(chatId ?? '');
   const { data: messages = [], isLoading: historyLoading } = useChatHistory(chatId ?? '', !!chatId);
-
+  const cancelIndexingMutation = useCancelIndexing();
   const indexStatus = repoIndexStatus?.indexStatus ?? activeChat?.indexStatus ?? 'idle';
+  const lastIndexedAt = repoIndexStatus?.lastIndexedAt ?? activeChat?.lastIndexedAt;
   const isIndexing = indexStatus === 'running';
   const shouldShowIndexingTerminal = !!chatId && indexStatus === 'running';
-  const isChatReady = indexStatus === 'done';
+  const isChatReady = indexStatus === 'done' || (indexStatus === 'cancelled' && !!lastIndexedAt);
   const isInputDisabled = !isChatReady || isIndexing || sendMessageMutation.isPending;
 
   const setMessageForActiveChat = (nextMessage: string) => {
@@ -82,6 +84,15 @@ export default function ChatPage() {
     }
   };
 
+  const handleCancelIndexing = async () => {
+    if (!chatId || cancelIndexingMutation.isPending) return;
+    try {
+      await cancelIndexingMutation.mutateAsync(chatId);
+    } catch (error) {
+      console.error('Failed to cancel indexing:', error);
+    }
+  };
+
   useEffect(() => {
     if (chatId) setActiveChatId(chatId);
   }, [chatId, setActiveChatId]);
@@ -104,6 +115,27 @@ export default function ChatPage() {
     queryClient.invalidateQueries({ queryKey: reposKeys.list() });
     queryClient.invalidateQueries({ queryKey: reposKeys.detail(chatId) });
   }, [chatId, queryClient, repoIndexStatus?.indexStatus]);
+
+  const prevIndexStatusRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (indexStatus === 'cancelled' && prevIndexStatusRef.current === 'running') {
+      console.log('[ChatPage] indexStatus=cancelled, firing toast');
+      toast.error('Indexing cancelled.', { duration: 3000 });
+    }
+    prevIndexStatusRef.current = indexStatus;
+  }, [indexStatus]);
+
+  const repoFromList = chatId ? repos?.find((r) => r._id === chatId) : null;
+  useEffect(() => {
+    if (!chatId || !repoFromList) return;
+    const status = repoFromList.indexStatus;
+    if (status !== 'done' && status !== 'failed' && status !== 'cancelled') return;
+    queryClient.setQueryData(reposKeys.indexStatus(chatId), {
+      indexStatus: status,
+      indexError: repoFromList.indexError ?? null,
+      lastIndexedAt: repoFromList.lastIndexedAt ?? null,
+    });
+  }, [chatId, queryClient, repoFromList?.indexStatus, repoFromList?.indexError, repoFromList?.lastIndexedAt]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
@@ -209,6 +241,7 @@ export default function ChatPage() {
                 repoName={activeChat?.name}
                 status={indexStatus}
                 errorMessage={repoIndexStatus?.indexError ?? activeChat?.indexError}
+                onCancel={handleCancelIndexing}
               />
             </motion.div>
           </motion.div>

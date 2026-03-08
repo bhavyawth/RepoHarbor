@@ -25,13 +25,6 @@ export interface RepoItem {
   size?: number;
 }
 
-//todo : remove this or use this later
-// export interface FileChunk {
-//   content: string;
-//   startIndex: number;
-//   chunkIndex: number;
-// }
-
 export const githubApi = {
   getRepoDetails: async (owner: string, repo: string): Promise<RepoDetails> => {
     const { data } = await api.get(`/github/repos/${owner}/${repo}`);

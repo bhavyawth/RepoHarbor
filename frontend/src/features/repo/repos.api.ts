@@ -1,6 +1,6 @@
 import { api } from '../../api/client';
 
-export type IndexStatus = 'idle' | 'running' | 'done' | 'failed';
+export type IndexStatus = 'idle' | 'running' | 'done' | 'failed' | 'cancelled';
 export interface Repo {
   isPinned: boolean;
   _id: string;
@@ -100,5 +100,9 @@ export const reposApi = {
 
   pinRepo: async (repoId: string): Promise<void> => {
     await api.patch(`/repos/${repoId}/pin`);
-  }
+  },
+
+  cancelIndex: async (repoId: string): Promise<void> => {
+    await api.post(`/repos/${repoId}/cancel-index`);
+  },
 };

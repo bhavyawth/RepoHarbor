@@ -111,14 +111,13 @@ export function usePinRepo() {
   });
 }
 
-export function useIndexChat() {
+export function useCancelIndexing() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: reposApi.indexChat,
-    onSuccess: (_, chatId) => {
+    mutationFn: reposApi.cancelIndex,
+    onSuccess: (_, repoId) => {
+      queryClient.invalidateQueries({ queryKey: reposKeys.indexStatus(repoId) });
       queryClient.invalidateQueries({ queryKey: reposKeys.list() });
-      queryClient.invalidateQueries({ queryKey: reposKeys.detail(chatId) });
-      queryClient.invalidateQueries({ queryKey: reposKeys.indexStatus(chatId) });
     },
   });
 }
@@ -133,5 +132,6 @@ export function useRepoIndexStatus(repoId?: string, shouldPoll = true) {
       const status = query.state.data?.indexStatus;
       return status === 'running' ? 2000 : false;
     },
+    staleTime: 0,
   });
 }

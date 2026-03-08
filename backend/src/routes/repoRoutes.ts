@@ -9,6 +9,7 @@ import {
   getRepoStructure,
   pinRepo,
   getRepoIndexStatus,
+  cancelIndexing,
 } from "../controllers/repoController";
 import {
   getChatHistory,
@@ -25,6 +26,7 @@ router.post("/", registerRepo);
 router.get("/", listRepos);
 router.delete("/:repoId", deleteRepo);
 router.post("/:repoId/ingest", ingestRepo);
+router.post("/:repoId/cancel-index", cancelIndexing);
 router.post("/:repoId/messages", chatWithRepo);
 router.get("/:repoId/structure", getRepoStructure);
 router.patch("/:repoId/pin", pinRepo);

@@ -78,5 +78,3 @@ export function RepoStructurePanel({
     </div>
   );
 }
-
-//todo: to fix the scroll issue and delte extra action button from navbar

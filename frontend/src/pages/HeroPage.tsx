@@ -82,7 +82,7 @@ export default function Hero() {
       await axios.get('http://localhost:3000/api/auth/me', { withCredentials: true });
       const chat = await registerRepoMutation.mutateAsync({
         repoUrl: normalizedRepoUrl,
-        branch: repoBranch.trim() || 'main',
+        branch: repoBranch.trim(),
       });
       addChat(chat);
       setActiveChatId(chat._id);
@@ -91,7 +91,7 @@ export default function Hero() {
       const status = (err as { response?: { status?: number } })?.response?.status;
       if (status === 401) {
         localStorage.setItem('pendingRepoUrl', normalizedRepoUrl);
-        localStorage.setItem('pendingRepoBranch', repoBranch.trim() || 'main');
+        localStorage.setItem('pendingRepoBranch', repoBranch.trim());
         window.location.href = 'http://localhost:3000/api/auth/github';
         return;
       }
@@ -106,6 +106,7 @@ export default function Hero() {
   }
 
   useEffect(() => {
+    document.title = "RepoHarbor: Chat with your Repository";
     handleScrollToTop();
   }, []);
 

@@ -34,11 +34,7 @@ app.use(passport.session());
 app.use('/api/github', githubRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/repos', repoRoutes);
-//todo: remove in production
-app.get('/profile', (req, res) => {
-  if (!req.isAuthenticated || !req.isAuthenticated()) return res.status(401).send('Unauthorized');
-  res.json(req.user);
-});
+
 connectDB();
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

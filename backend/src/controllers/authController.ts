@@ -6,7 +6,7 @@ import User, { UserDocument } from "../models/userModel";
 const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID!;
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET!;
 const GITHUB_CALLBACK_URL = process.env.GITHUB_CALLBACK_URL!;
-const FRONTEND_URL = process.env.FRONTEND_URL!; //todo : add this in the later stages
+const FRONTEND_URL = process.env.FRONTEND_URL!; 
 
 export const redirectToGitHub = (req: Request, res: Response) => {
   const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${GITHUB_CALLBACK_URL}&scope=user:email`;
@@ -65,7 +65,7 @@ export const githubCallback = async (req: Request, res: Response) => {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: Number(process.env.REFRESH_JWT_EXPIRATION)*24*60*60*1000, // in ms
-    });    // todo: add frontend url
+    });    
     return res.redirect(`${FRONTEND_URL}`);
   } catch (error: any) {
     console.error("GitHub OAuth error:", error.message);

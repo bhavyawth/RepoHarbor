@@ -83,6 +83,7 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
 
   const handleLogout = async () => {
     try {
+      setOpenMobile(false);
       await logout();
     } finally {
       setActiveChatId(null);
@@ -318,6 +319,7 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
                                     collisionPadding={12}
                                     sideOffset={6}
                                     className="z-[80] max-w-[calc(100vw-1rem)] rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+                                    onClick={(e) => e.stopPropagation()}
                                   >
                                     <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => handlePinRepo(chat._id)}>
                                       <Pin className="size-4" />
@@ -445,6 +447,7 @@ export default function AppSidebar({ onOpenSearch }: AppSidebarProps) {
                                     collisionPadding={12}
                                     sideOffset={6}
                                     className="z-[80] max-w-[calc(100vw-1rem)] rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+                                    onClick={(e) => e.stopPropagation()}
                                   >
                                     <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => handlePinRepo(chat._id)}>
                                       <Pin className="size-4" />

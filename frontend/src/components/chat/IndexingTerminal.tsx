@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '../../lib/utils';
-
-type TerminalStatus = 'idle' | 'running' | 'done' | 'failed';
+type TerminalStatus = 'idle' | 'running' | 'done' | 'failed' | 'cancelled';
 
 interface IndexingTerminalProps {
   repoId: string;
@@ -9,6 +8,7 @@ interface IndexingTerminalProps {
   status: TerminalStatus;
   errorMessage?: string | null;
   className?: string;
+  onCancel?: () => void;
 }
 
 const STEP_DELAY_MS = 480;
@@ -21,6 +21,7 @@ const STATUS_STYLES: Record<TerminalStatus, string> = {
   running: 'bg-amber-100 text-amber-700 ring-amber-200/90 dark:bg-amber-400/20 dark:text-amber-200 dark:ring-amber-300/40',
   done: 'bg-emerald-100 text-emerald-700 ring-emerald-200/90 dark:bg-emerald-400/20 dark:text-emerald-200 dark:ring-emerald-300/40',
   failed: 'bg-rose-100 text-rose-700 ring-rose-200/90 dark:bg-rose-400/20 dark:text-rose-200 dark:ring-rose-300/40',
+  cancelled: 'bg-slate-200 text-slate-600 ring-slate-300/80 dark:bg-slate-500/25 dark:text-slate-300 dark:ring-slate-400/40',
 };
 
 function getIndexingSteps(repoName?: string): string[] {
@@ -45,6 +46,7 @@ export default function IndexingTerminal({
   status,
   errorMessage,
   className,
+  onCancel,
 }: IndexingTerminalProps) {
   const [renderedLines, setRenderedLines] = useState<string[]>([]);
   const [typingLine, setTypingLine] = useState('');
@@ -152,7 +154,6 @@ export default function IndexingTerminal({
     const eventKey = `${repoId}:${status}:${errorMessage ?? ''}`;
     if (terminalEventKeyRef.current === eventKey) return;
     terminalEventKeyRef.current = eventKey;
-
     if (status === 'done') {
       enqueueLine('Repository indexed successfully.');
     } else if (status === 'failed') {
@@ -162,7 +163,7 @@ export default function IndexingTerminal({
   }, [repoId, status, errorMessage]);
 
   useEffect(() => () => clearAllTimers(), []);
-
+  
   return (
     <div
       className={cn(
@@ -192,7 +193,7 @@ export default function IndexingTerminal({
         </span>
       </div>
       {/* Terminal Content */}
-      <div className="max-h-[340px] overflow-y-auto px-4 py-3 font-mono text-sm leading-6">
+      <div className="h-[340px] overflow-y-auto px-4 py-3 font-mono text-sm leading-6">
         {renderedLines.map((line, index) => (
           <div
             key={index}
@@ -214,6 +215,21 @@ export default function IndexingTerminal({
         />
         <div ref={logsEndRef} />
       </div>
+      {/* Cancel Button */}
+      {status === 'running' && onCancel && (
+        <div className="flex items-center justify-between border-t border-slate-200 px-4 py-3 dark:border-white/10">
+          <p className="text-[11px] text-slate-400 dark:text-slate-500">
+            Cancellation may take a few seconds.
+          </p>
+          <button
+            onClick={onCancel}
+            className="hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:cursor-pointer transition-colors duration-150 hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-medium text-rose-600 transition-all hover:bg-rose-100 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-400 dark:hover:bg-rose-500/20"
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+            Cancel Indexing
+          </button>
+        </div>
+      )}
     </div>
   );
 }
