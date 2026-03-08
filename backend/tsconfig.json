@@ -9,10 +9,14 @@
     "skipLibCheck": true,
     "outDir": "./dist", // Where compiled JS will go
     "rootDir": "./src", // Your source code directory
-    "allowImportingTsExtensions": true, // May be needed with NodeNext
-    "noEmit": true, // For tsx/ts-node, you might not want to emit JS files
+    // "allowImportingTsExtensions": true, // May be needed with NodeNext
+    "noEmit": false, // For tsx/ts-node, you might not want to emit JS files
     "resolveJsonModule": true // Useful if you import JSON files
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
