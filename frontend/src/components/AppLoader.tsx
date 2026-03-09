@@ -12,14 +12,15 @@ export default function AppLoader() {
 
   return (
     <div
-      className={`min-h-screen flex flex-col items-center justify-center bg-white dark:bg-black transition-opacity duration-500 ${visible ? 'opacity-100' : 'opacity-0'}`}
+      className={`min-h-screen flex flex-col items-center justify-center bg-black transition-opacity duration-500 ${visible ? 'opacity-100' : 'opacity-0'}`}
     >
       <div className="flex items-end gap-[3px] h-8">
         {bars.map((i) => (
           <div
             key={i}
-            className="w-[3px] rounded-full bg-slate-800 dark:bg-slate-200"
+            className="w-[3px] rounded-full"
             style={{
+              background: 'linear-gradient(to top, #6366f1, #3b82f6)',
               animation: `waveBar 1.1s ease-in-out infinite`,
               animationDelay: `${i * 0.1}s`,
             }}
@@ -27,8 +28,13 @@ export default function AppLoader() {
         ))}
       </div>
       <p
-        className="mt-6 text-[11px] font-medium tracking-[0.2em] uppercase text-slate-400 dark:text-slate-500"
-        style={{ animation: 'fadePulse 2s ease-in-out infinite' }}
+        className="mt-6 text-[13px] font-bold tracking-[0.2em] uppercase"
+        style={{
+          animation: 'fadePulse 2s ease-in-out infinite',
+          background: 'linear-gradient(to right, #9333ea, #3b82f6)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+        }}
       >
         RepoHarbor
       </p>
@@ -39,7 +45,7 @@ export default function AppLoader() {
         }
         @keyframes fadePulse {
           0%, 100% { opacity: 0.4; }
-          50%       { opacity: 0.9; }
+          50%       { opacity: 1; }
         }
       `}</style>
     </div>

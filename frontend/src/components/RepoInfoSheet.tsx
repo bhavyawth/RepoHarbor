@@ -40,7 +40,7 @@ export function RepoInfoSheet({
   const showLoading = repoInfoLoading && !repoInfoError
 
   return (
-    <div className="overflow-auto max-h-screen">
+    <div className="dark:bg-slate-950 dark:border-slate-800 overflow-auto max-h-screen">
       <Sheet open={repoInfoOpen} onOpenChange={setRepoInfoOpen}>
         <SheetContent side="right" className="w-[360px] sm:w-[420px]">
           <div className="flex items-start justify-between">

@@ -140,7 +140,7 @@ export default function Hero() {
               <span>Semantic search over your entire codebase</span>
             </motion.div>
             {/* Heading */}
-            <h1 className="text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight mb-4 lg:mb-6 xl:mb-6 w-full break-words">
+            <h1 className="text-[2rem] sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight mb-4 lg:mb-6 xl:mb-6 w-full break-words">
               <span className="block">Chat with your</span>
               <span className="block bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent w-full">
                 <TypingAnimation
@@ -389,7 +389,7 @@ export default function Hero() {
         </motion.div>
       </div>
       {/* ── Features ── */}
-      <div className="relative z-10 max-w-7xl mx-auto my-0 px-4 sm:px-5 lg:px-8 py-16 sm:py-16 border-t border-slate-200 dark:border-slate-800 scroll-mt-24 sm:scroll-mt-16" id="features">
+      <div className="relative z-10 max-w-7xl mx-auto my-0 px-4 sm:px-5 lg:px-8 py-16 sm:py-16 border-t border-b border-slate-200 dark:border-slate-800 scroll-mt-24 sm:scroll-mt-16" id="features">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}

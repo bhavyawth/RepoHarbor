@@ -41,7 +41,7 @@ export function RepoStructurePanel({
   onClose,
 }: Props) {
   return (
-    <div className="repo-summary-panel absolute top-full left-1/2 z-10 mt-2 w-[min(520px,90vw)] -translate-x-1/2 rounded-lg border border-border bg-popover p-4 text-sm shadow-xl max-h-[60vh] flex flex-col">
+    <div className="repo-summary-panel dark:bg-slate-950 dark:border-slate-800 absolute top-full left-1/2 z-10 mt-2 w-[min(520px,90vw)] -translate-x-1/2 rounded-lg border border-border bg-popover p-4 text-sm shadow-xl max-h-[60vh] flex flex-col">
       <div className="mb-3 flex items-center justify-between gap-2 shrink-0">
         <div className="flex items-center gap-2 font-medium">
           <FolderTree className="h-4 w-4 text-purple-600 dark:text-purple-400" />
