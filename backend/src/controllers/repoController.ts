@@ -21,6 +21,15 @@ const getErrorMessage = (error: unknown): string => {
 async function processIndexing(repo: RepoDocument): Promise<void> {
   const repoName = `${repo.owner}/${repo.name}`;
   const repoId = repo._id.toString();
+  const handleCancellation = async (): Promise<void> => {
+    clearCancelled(repoId);
+    await Chunk.deleteMany({ repoId: repo._id, status: "pending" });
+    const activeChunks = await Chunk.countDocuments({ repoId: repo._id, status: "active" });
+    await Repo.findByIdAndUpdate(repo._id, {
+      indexStatus: activeChunks > 0 ? "done" : "cancelled",
+      indexError: activeChunks > 0 ? null : "Indexing cancelled by user",
+    });
+  };
   const treeEntries = await getRepoTree(
     repo.owner, 
     repo.name,
@@ -38,18 +47,17 @@ async function processIndexing(repo: RepoDocument): Promise<void> {
   for (let i = 0; i < filePaths.length; i += INGEST_BATCH_SIZE) {
     //cancellation happens only at boundary of batches!
     if (isCancelled(repoId)) {
-      clearCancelled(repoId);
-      await Chunk.deleteMany({ repoId: repo._id, status: "pending" });
-      await Repo.findByIdAndUpdate(repo._id, {
-        indexStatus: "cancelled",
-        indexError: "Indexing cancelled by user",
-      });
+      await handleCancellation();
       // console.log(`[ingestRepo] Cancelled indexing for ${repoName}`);
       return;
     }
     const batchPaths = filePaths.slice(i, i + INGEST_BATCH_SIZE);
     const batchChunks: TextChunk[] = [];
     for (const filePath of batchPaths) {
+      if (isCancelled(repoId)) {
+        await handleCancellation();
+        return;
+      }
       try {
         const content = await getFileContent(
           repo.owner,
@@ -64,8 +72,16 @@ async function processIndexing(repo: RepoDocument): Promise<void> {
       }
     }
     if (batchChunks.length === 0) continue;
+    if (isCancelled(repoId)) {
+      await handleCancellation();
+      return;
+    }
     const embeddedChunks = await generateEmbeddingsForChunks(batchChunks);
     if (embeddedChunks.length === 0) continue;
+    if (isCancelled(repoId)) {
+      await handleCancellation();
+      return;
+    }
     const chunkDocs = embeddedChunks.map((ec) => ({
       repoId: repo._id,
       filePath: ec.filepath,
@@ -89,6 +105,7 @@ async function processIndexing(repo: RepoDocument): Promise<void> {
     lastIndexedAt: new Date(),
     indexError: null,
   });
+  clearCancelled(repoId);
   // console.log(`[ingestRepo] Successfully indexed ${repoName}: ${totalChunks} chunks from ${filePaths.length} files`);
 }
 // ============================================================
@@ -217,6 +234,7 @@ export const ingestRepo = async (req: Request, res: Response) => {
       const errorMessage = getErrorMessage(error);
       console.error(`[ingestRepo] Indexing failed for ${indexingRepo.owner}/${indexingRepo.name}:`, errorMessage);
       try {
+        clearCancelled(indexingRepo._id.toString());
         await Repo.findByIdAndUpdate(indexingRepo._id, {
           indexStatus: "failed",
           indexError: errorMessage,

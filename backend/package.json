@@ -12,9 +12,11 @@
   "author": "",
   "license": "ISC",
   "description": "",
-  "devDependencies": {
-  },
   "dependencies": {
+    "@google/genai": "^1.45.0",
+    "@octokit/app": "^16.1.1",
+    "@octokit/core": "^7.0.5",
+    "@octokit/rest": "^22.0.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
@@ -23,14 +25,6 @@
     "@types/node": "^24.6.2",
     "@types/passport": "^1.0.17",
     "@types/passport-github2": "^1.2.9",
-    "ts-node": "^10.9.2",
-    "ts-node-dev": "^2.0.0",
-    "tsx": "^4.20.6",
-    "typescript": "^5.9.2",
-    "@octokit/app": "^16.1.1",
-    "@octokit/core": "^7.0.5",
-    "@octokit/rest": "^22.0.0",
-    "@xenova/transformers": "^2.17.2",
     "axios": "^1.12.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
@@ -41,6 +35,10 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.2",
     "passport": "^0.7.0",
-    "passport-github2": "^0.1.12"
+    "passport-github2": "^0.1.12",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.2"
   }
 }

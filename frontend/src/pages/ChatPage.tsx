@@ -34,12 +34,14 @@ export default function ChatPage() {
   const { data: messages = [], isLoading: historyLoading } = useChatHistory(chatId ?? '', !!chatId);
   const cancelIndexingMutation = useCancelIndexing();
   const indexStatus = repoIndexStatus?.indexStatus ?? activeChat?.indexStatus ?? 'idle';
+  const indexError = repoIndexStatus?.indexError ?? activeChat?.indexError;
   const lastIndexedAt = repoIndexStatus?.lastIndexedAt ?? activeChat?.lastIndexedAt;
   const isIndexing = indexStatus === 'running';
   const shouldShowIndexingTerminal = !!chatId && indexStatus === 'running';
   const isChatReady = indexStatus === 'done' || (indexStatus === 'cancelled' && !!lastIndexedAt);
   const isInputDisabled = !isChatReady || isIndexing || sendMessageMutation.isPending;
-
+  const cancelRequestedRef = useRef(false);
+  
   const setMessageForActiveChat = (nextMessage: string) => {
     if (!chatId) return;
     setDraftsByChatId((prev) => ({
@@ -86,6 +88,7 @@ export default function ChatPage() {
 
   const handleCancelIndexing = async () => {
     if (!chatId || cancelIndexingMutation.isPending) return;
+    cancelRequestedRef.current = true;
     try {
       await cancelIndexingMutation.mutateAsync(chatId);
     } catch (error) {
@@ -118,12 +121,23 @@ export default function ChatPage() {
 
   const prevIndexStatusRef = useRef<string | undefined>(undefined);
   useEffect(() => {
-    if (indexStatus === 'cancelled' && prevIndexStatusRef.current === 'running') {
-      console.log('[ChatPage] indexStatus=cancelled, firing toast');
+  const prev = prevIndexStatusRef.current;
+  if (prev === 'running') {
+    if (indexStatus === 'cancelled') {
       toast.error('Indexing cancelled.', { duration: 3000 });
+    } else if (indexStatus === 'done') {
+      if (cancelRequestedRef.current) {
+        toast.error('Indexing cancelled.', { duration: 3000 });
+        cancelRequestedRef.current = false;
+      } else {
+        toast.success('Indexing complete!', { duration: 3000 });
+      }
+    } else if (indexStatus === 'failed') {
+      toast.error(`Indexing failed: ${indexError ?? 'Unknown error'}`, { duration: 5000 });
     }
-    prevIndexStatusRef.current = indexStatus;
-  }, [indexStatus]);
+  }
+  prevIndexStatusRef.current = indexStatus;
+}, [indexStatus, indexError]);
 
   const repoFromList = chatId ? repos?.find((r) => r._id === chatId) : null;
   useEffect(() => {

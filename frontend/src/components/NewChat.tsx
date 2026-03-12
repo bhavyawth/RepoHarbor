@@ -13,6 +13,8 @@ export default function NewChat() {
   const navigate = useNavigate();
   const [repoUrl, setRepoUrl] = useState('');
   const [repoBranch, setRepoBranch] = useState('');
+  const [repoUrlFocused, setRepoUrlFocused] = useState(false);
+  const [repoBranchFocused, setRepoBranchFocused] = useState(false);
   const [error, setError] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const { addChat, setActiveChatId } = useChatStore();
@@ -111,9 +113,18 @@ export default function NewChat() {
                   setRepoUrl(e.target.value);
                   if (error) setError('');
                 }}
+                onFocus={() => setRepoUrlFocused(true)}
+                onBlur={() => setRepoUrlFocused(false)}
                 placeholder="https://github.com/owner/repository"
                 disabled={isCreating}
-                className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-800 placeholder:text-slate-300 shadow-none transition-all duration-200 focus-visible:border-purple-500/60 focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-purple-500/20 focus-visible:shadow-[0_20px_60px_-12px_rgba(147,51,234,0.25)] disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus-visible:border-purple-400/60 dark:focus-visible:bg-slate-800 dark:focus-visible:ring-purple-400/20 dark:focus-visible:shadow-[0_20px_60px_-12px_rgba(147,51,234,0.3)] sm:h-12"
+                className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-800 placeholder:text-slate-300 shadow-none transition-all duration-200 focus-visible:bg-white disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus-visible:bg-slate-800 sm:h-12"
+                style={{
+                  borderColor: repoUrlFocused ? 'rgba(99,102,241,0.5)' : undefined,
+                  boxShadow: repoUrlFocused
+                    ? '0 0 0 3px rgba(99,102,241,0.2), 0 20px 60px -12px rgba(129,140,248,0.25)'
+                    : undefined,
+                  transition: 'border-color 0.2s, box-shadow 0.2s',
+                }}
               />
             </div>
 
@@ -124,9 +135,18 @@ export default function NewChat() {
                 setRepoBranch(e.target.value);
                 if (error) setError('');
               }}
+              onFocus={() => setRepoBranchFocused(true)}
+              onBlur={() => setRepoBranchFocused(false)}
               placeholder="branch"
               disabled={isCreating}
-              className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-800 placeholder:text-slate-300 shadow-none transition-all duration-200 focus-visible:border-purple-500/60 focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-purple-500/20 focus-visible:shadow-[0_20px_60px_-12px_rgba(147,51,234,0.25)] disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus-visible:border-purple-400/60 dark:focus-visible:bg-slate-800 dark:focus-visible:ring-purple-400/20 dark:focus-visible:shadow-[0_20px_60px_-12px_rgba(147,51,234,0.3)] sm:h-12 md:w-28"
+              className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-800 placeholder:text-slate-300 shadow-none transition-all duration-200 focus-visible:bg-white disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus-visible:bg-slate-800 sm:h-12 md:w-28"
+              style={{
+                borderColor: repoBranchFocused ? 'rgba(99,102,241,0.5)' : undefined,
+                boxShadow: repoBranchFocused
+                  ? '0 0 0 3px rgba(99,102,241,0.2), 0 20px 60px -12px rgba(129,140,248,0.25)'
+                  : undefined,
+                transition: 'border-color 0.2s, box-shadow 0.2s',
+              }}
             />
 
             <Button
