@@ -95,7 +95,7 @@ export default function Hero() {
         window.location.href = `${baseUrl}/auth/github`;
         return;
       }
-      setError(getErrorMessage(err, 'Failed to create chat. Please check the repository and try again.'));
+      setError(getErrorMessage(err));
     }
   };
 

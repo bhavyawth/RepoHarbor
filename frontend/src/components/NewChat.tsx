@@ -53,7 +53,7 @@ export default function NewChat() {
       setActiveChatId(chat._id);
       navigate(`/chat/${chat._id}`);
     } catch (err) {
-      setError(getErrorMessage(err, 'Failed to create chat.'));
+      setError(getErrorMessage(err));
     } finally {
       setIsCreating(false);
     }

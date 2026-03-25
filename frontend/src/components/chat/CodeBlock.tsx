@@ -33,7 +33,7 @@ export default function CodeBlock({ code, language }: CodeBlockProps) {
   };
 
   return (
-    <div className="code-theme my-4 overflow-hidden rounded-xl border border-slate-200/90 bg-slate-50 transition-colors dark:border-slate-700/90 dark:bg-[#1f2430]">
+    <div className="code-theme my-2 overflow-hidden rounded-xl border border-slate-200/90 bg-slate-50 transition-colors dark:border-slate-700/90 dark:bg-[#1f2430]">
       <div className="flex items-center justify-between border-b border-slate-200/90 bg-slate-100/80 px-3 py-2 dark:border-slate-700/80 dark:bg-[#232a39]">
         <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-600 dark:text-slate-400">
           {language || 'code'}
@@ -49,7 +49,7 @@ export default function CodeBlock({ code, language }: CodeBlockProps) {
           {copied ? 'Copied' : 'Copy'}
         </Button>
       </div>
-      <pre className="overflow-x-auto bg-slate-50 p-4 text-sm leading-6 dark:bg-[#1f2430]">
+      <pre className="overflow-x-auto bg-slate-50 p-3 text-sm leading-6 dark:bg-[#1f2430]">
         <code
           className={language ? `hljs language-${language}` : 'hljs'}
           dangerouslySetInnerHTML={{ __html: highlightedCode }}

@@ -1,10 +1,10 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { Loader2, Search, X } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '../ui/input';
 import { useMessageSearch } from '../../features/chat/chat.hooks';
-import { getErrorMessage } from '../../lib/getErrorMessage';
+import ApiErrorAlert from '../ui/ApiErrorAlert';
 
 type GlobalChatSearchModalProps = {
   open: boolean;
@@ -82,10 +82,6 @@ export default function GlobalChatSearchModal({ open, onClose }: GlobalChatSearc
   const trimmed = query.trim();
   const showIdle = trimmed.length < 2;
   const showEmpty = !showIdle && !isFetching && !isError && results.length === 0;
-  const errorMessage = useMemo(() => {
-    if (!isError) return '';
-    return getErrorMessage(error, 'Failed to search messages.');
-  }, [isError, error]);
 
   return (
     <AnimatePresence>
@@ -137,9 +133,10 @@ export default function GlobalChatSearchModal({ open, onClose }: GlobalChatSearc
                 </div>
               )}
               {isError && (
-                <div className="mx-2 my-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
-                  {errorMessage}
-                </div>
+                <ApiErrorAlert
+                  error={error}
+                  className="mx-2 my-2 px-3 py-2"
+                />
               )}
               {showEmpty && (
                 <div className="px-3 py-8 text-center text-sm text-slate-500 dark:text-slate-400">

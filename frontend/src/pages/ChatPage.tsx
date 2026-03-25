@@ -8,7 +8,6 @@ import { useChatHistory, useSendMessage } from '../features/chat/chat.hooks';
 import { Button } from '../components/ui/button';
 import ChatContainer from '../components/chat/ChatContainer';
 import IndexingTerminal from '../components/chat/IndexingTerminal';
-import { getErrorMessage } from '../lib/getErrorMessage';
 import { toast } from 'sonner';
 
 export default function ChatPage() {
@@ -19,7 +18,7 @@ export default function ChatPage() {
   const { chats, setActiveChatId } = useChatStore();
   const { data: repos = [], isSuccess: reposLoaded } = useGetRepos();
   const [draftsByChatId, setDraftsByChatId] = useState<Record<string, string>>({});
-  const [sendError, setSendError] = useState<string | null>(null);
+  const [sendError, setSendError] = useState<unknown>(null);
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -68,7 +67,7 @@ export default function ChatPage() {
         ...prev,
         [currentChatId]: trimmedMessage,
       }));
-      setSendError(getErrorMessage(error, 'Failed to send message.'));
+      setSendError(error);
     }
   };
 

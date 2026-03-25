@@ -3,7 +3,8 @@ import { Button } from './ui/button';
 // import { ScrollArea } from './ui/scroll-area';
 import { File, Folder, Tree } from './ui/file-tree';
 import type { RepoNode } from '../features/repo/repos.api';
-import { getErrorMessage } from '../lib/getErrorMessage';
+import { useEffect } from 'react';
+import ApiErrorAlert from './ui/ApiErrorAlert';
 
 type Props = {
   repoName: string;
@@ -40,6 +41,18 @@ export function RepoStructurePanel({
   tree,
   onClose,
 }: Props) {
+  useEffect(() => {
+    function handleEsc(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    }
+    document.addEventListener("keydown", handleEsc);
+    return () => {
+      document.removeEventListener("keydown", handleEsc);
+    };
+  }, [onClose]);
+
   return (
     <div className="repo-summary-panel dark:bg-slate-950 dark:border-slate-800 absolute top-full left-1/2 z-10 mt-2 w-[min(520px,90vw)] -translate-x-1/2 rounded-lg border border-border bg-popover p-4 text-sm shadow-xl max-h-[60vh] flex flex-col">
       <div className="mb-3 flex items-center justify-between gap-2 shrink-0">
@@ -62,9 +75,7 @@ export function RepoStructurePanel({
         </div>
       )}
       {!isLoading && isError && (
-        <div className="rounded-md border border-red-200 bg-red-50 p-3 text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
-          {getErrorMessage(error, 'Failed to fetch repository structure.')}
-        </div>
+        <ApiErrorAlert error={error} />
       )}
       {!isLoading && !isError && (
         <div className="overflow-auto pr-3 min-h-0">

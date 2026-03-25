@@ -321,10 +321,12 @@ export const getRepoStructure = async (req: Request, res: Response) => {
     const treeEntries = await getRepoTree(repo.owner, repo.name, repo.branch ?? undefined);
     const filePaths = treeEntries
       .filter((entry) => entry.type === "blob")
-      .filter((entry) => !shouldSkipPath(entry.path))
-      .filter((entry) => hasAllowedExtension(entry.path))
-      .filter((entry) => entry.size === undefined || entry.size <= MAX_FILE_SIZE)
       .map((entry) => entry.path);
+
+      // skipped files should be shown in the navbar repotree, correction
+      // .filter((entry) => !shouldSkipPath(entry.path))
+      // .filter((entry) => hasAllowedExtension(entry.path))
+      // .filter((entry) => entry.size === undefined || entry.size <= MAX_FILE_SIZE)
     const repoTree = buildJsonTree(filePaths);
     await Repo.findByIdAndUpdate(repoId, { repoTree });
     return res.status(200).json({ tree: repoTree, structure: treeToPrompt(repoTree) });

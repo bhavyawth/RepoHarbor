@@ -4,13 +4,14 @@ import type { ChatMessage } from '../../features/chat/chat.api';
 import MessageRenderer from './MessageRenderer';
 import { useEffect } from 'react';
 import { Skeleton } from '../ui/skeleton';
+import ApiErrorAlert from '../ui/ApiErrorAlert';
 
 type ChatContainerProps = {
   messages: ChatMessage[];
   historyLoading: boolean;
   isChatReady: boolean;
   isThinking: boolean;
-  sendError: string | null;
+  sendError: unknown;
   highlightedMessageId?: string | null;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
 };
@@ -121,10 +122,11 @@ export default function ChatContainer({
         </div>
       )}
 
-      {sendError && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
-          {sendError}
-        </div>
+      {sendError != null && (
+        <ApiErrorAlert
+          error={sendError}
+          className="px-4 py-3"
+        />
       )}
 
       <div ref={messagesEndRef} />

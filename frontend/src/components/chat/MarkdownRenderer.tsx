@@ -24,13 +24,28 @@ function getNodeText(node: React.ReactNode): string {
 
 type MarkdownRendererProps = {
   content: string;
+  className?: string;
 };
 
-export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
+export default function MarkdownRenderer({ content, className }: MarkdownRendererProps) {
   const parsedContent = normalizeAssistantMarkdown(content);
 
   return (
-    <div className="markdown-content text-sm text-slate-800 dark:text-slate-200">
+    <div
+      className={[
+        'markdown-content prose prose-slate max-w-none text-sm dark:prose-invert',
+        'prose-headings:scroll-mt-20 prose-headings:mt-3 prose-headings:mb-1.5 prose-headings:font-semibold prose-headings:tracking-tight',
+        'prose-p:my-2 prose-p:leading-7 prose-p:whitespace-pre-wrap',
+        'prose-ul:my-3 prose-ul:list-disc prose-ul:pl-6',
+        'prose-ol:my-3 prose-ol:list-decimal prose-ol:pl-6',
+        'prose-li:my-1 prose-li:marker:text-slate-500 dark:prose-li:marker:text-slate-400',
+        'prose-strong:text-slate-900 dark:prose-strong:text-slate-100',
+        'prose-a:text-sky-700 prose-a:underline-offset-2 hover:prose-a:text-sky-600 dark:prose-a:text-sky-300 dark:hover:prose-a:text-sky-200',
+        'prose-blockquote:border-slate-300 prose-blockquote:text-slate-600 dark:prose-blockquote:border-slate-700 dark:prose-blockquote:text-slate-300',
+        'prose-hr:border-slate-200 dark:prose-hr:border-slate-800',
+        className ?? '',
+      ].join(' ')}
+    >
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{

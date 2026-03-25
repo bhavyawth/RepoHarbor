@@ -7,13 +7,14 @@ import {
 } from "./ui/sheet"
 import { type RepoDetails } from "../features/github/github.api"
 import MarkdownRenderer from "./chat/MarkdownRenderer"
+import ApiErrorAlert from "./ui/ApiErrorAlert"
 
 type Props = {
   repoInfoOpen: boolean
   setRepoInfoOpen: (v: boolean) => void
   repoInfoLoading: boolean
   repoInfoError: boolean
-  repoInfoErrorMessage?: string
+  repoInfoErrorValue?: unknown
   repoInfo?: RepoDetails
   repoSummary?: { summary: string }
   repoInfoTarget?: {
@@ -27,7 +28,7 @@ export function RepoInfoSheet({
   setRepoInfoOpen,
   repoInfoLoading,
   repoInfoError,
-  repoInfoErrorMessage,
+  repoInfoErrorValue,
   repoInfo,
   repoSummary,
   repoInfoTarget,
@@ -56,9 +57,10 @@ export function RepoInfoSheet({
               </div>
             )}
             {repoInfoError && (
-              <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
-                {repoInfoErrorMessage || 'Failed to load repo details.'}
-              </div>
+              <ApiErrorAlert
+                error={repoInfoErrorValue}
+                className="p-4"
+              />
             )}
             {!showLoading && !repoInfoError && repoInfoTarget && (
               <div className="space-y-4 rounded-lg border border-sidebar-border/60 bg-sidebar/30 p-4">
@@ -70,9 +72,9 @@ export function RepoInfoSheet({
                     {repoInfoTarget.owner}
                   </p>
                 </div>
-                <p className="text-sm overflow-y-auto max-h-60">
-                  <MarkdownRenderer content={description} />
-                </p>
+                <div className="max-h-60 overflow-y-auto text-sm">
+                  <MarkdownRenderer content={description} className="prose-sm" />
+                </div>
                 <div className="flex flex-wrap gap-2">
                   <span className="rounded-md bg-sidebar-accent px-2 py-1 text-xs">
                     ⭐ {repoInfo?.stargazers_count ?? 0}

@@ -31,12 +31,12 @@ import {
   useSummarizeRepo,
 } from '../features/repo/repos.hooks';
 import { useClearChat } from '../features/chat/chat.hooks';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { RepoStructurePanel } from './RepoStructurePanel';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import MarkdownRenderer from './chat/MarkdownRenderer';
-import { getErrorMessage } from '../lib/getErrorMessage';
 import { useIsMobile } from '../lib/hooks/use-mobile';
+import ApiErrorAlert from './ui/ApiErrorAlert';
 
 export default function Navbar() {
   const { data: user } = useAuth();
@@ -149,12 +149,36 @@ export default function Navbar() {
     [username]
   );
   const [greetingIndex, setGreetingIndex] = useState(0);
+  const summaryRef = useRef<HTMLDivElement>(null);
+  const structureRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setShowSummaryPanel(false);
     setShowStructurePanel(false);
     resetSummary();
   }, [activeRepo?._id, resetSummary]);
+
+  useEffect(() => {
+    if (!showSummaryPanel) return;
+    function handleClickOutside(event: MouseEvent) {
+      if (summaryRef.current && !summaryRef.current.contains(event.target as Node)) {
+        setShowSummaryPanel(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showSummaryPanel]);
+
+  useEffect(() => {
+    if (!showStructurePanel) return;
+    function handleClickOutside(event: MouseEvent) {
+      if (structureRef.current && !structureRef.current.contains(event.target as Node)) {
+        setShowStructurePanel(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showStructurePanel]);
 
   useEffect(() => {
     if (!isNewChatPage || mobileGreetings.length < 2) return;
@@ -308,7 +332,7 @@ export default function Navbar() {
           </DropdownMenuContent>
         </DropdownMenu>
         {showSummaryPanel && activeRepo && (
-          <div className="dark:bg-slate-950 dark:border-slate-800 repo-summary-panel absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[min(520px,90vw)] rounded-lg border border-border bg-popover p-4 text-sm shadow-xl hover:bg-slate-100 dark:hover:bg-slate-800">
+          <div ref={summaryRef} className="dark:bg-slate-950 dark:border-slate-800 repo-summary-panel absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[min(520px,90vw)] rounded-lg border border-border bg-popover p-4 text-sm shadow-xl">
             <div className="mb-2 flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 font-medium">
                 <Sparkles className="h-4 w-4 text-slate-700 dark:text-slate-300" />
@@ -329,9 +353,7 @@ export default function Navbar() {
               </div>
             )}
             {!repoSummaryLoading && repoSummaryError && (
-              <div className="rounded-md border border-red-200 bg-red-50 p-3 text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
-                {getErrorMessage(repoSummaryErrorValue, 'Failed to summarize repository.')}
-              </div>
+              <ApiErrorAlert error={repoSummaryErrorValue} />
             )}
             {!repoSummaryLoading && !repoSummaryError && repoSummary?.summary && (
               <div className="max-h-64 overflow-y-auto pr-1">
@@ -341,14 +363,16 @@ export default function Navbar() {
           </div>
         )}
         {showStructurePanel && activeRepo && (
-          <RepoStructurePanel
-            repoName={activeRepo.name}
-            isLoading={repoStructureLoading}
-            isError={repoStructureError}
-            error={repoStructureErrorValue}
-            tree={repoStructure?.tree}
-            onClose={() => setShowStructurePanel(false)}
-          />
+          <div ref={structureRef}>
+            <RepoStructurePanel
+              repoName={activeRepo.name}
+              isLoading={repoStructureLoading}
+              isError={repoStructureError}
+              error={repoStructureErrorValue}
+              tree={repoStructure?.tree}
+              onClose={() => setShowStructurePanel(false)}
+            />
+          </div>
         )}
       </div>
 

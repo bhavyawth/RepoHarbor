@@ -10,7 +10,6 @@ import GlobalChatSearchModal from '../components/chat/GlobalChatSearchModal';
 import { RepoInfoSheet } from '../components/RepoInfoSheet';
 import { useRepoDetails } from '../features/github/github.hooks';
 import { useRepoSummary } from '../features/repo/repos.hooks';
-import { getErrorMessage } from '../lib/getErrorMessage';
 
 export default function AppLayout() {
   const { data: user } = useAuth();
@@ -82,13 +81,7 @@ export default function AppLayout() {
           setRepoInfoOpen={setRepoInfoOpen}
           repoInfoLoading={repoSummaryLoading || repoInfoLoading}
           repoInfoError={repoSummaryError || repoInfoError}
-          repoInfoErrorMessage={
-            repoSummaryError
-              ? getErrorMessage(repoSummaryErrorValue, 'Failed to load repository summary.')
-              : repoInfoError
-                ? getErrorMessage(repoInfoErrorValue, 'Failed to load repo details.')
-                : undefined
-          }
+          repoInfoErrorValue={repoSummaryError ? repoSummaryErrorValue : repoInfoErrorValue}
           repoInfo={repoInfo}
           repoSummary={repoSummary}
           repoInfoTarget={
