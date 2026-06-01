@@ -6,8 +6,8 @@ export interface TextChunk {
   chunkIndex: number;
 }
 
-const DEFAULT_CHUNK_SIZE = 2000;
-const DEFAULT_OVERLAP = 200;
+const DEFAULT_CHUNK_SIZE = 12000;
+const DEFAULT_OVERLAP = 50;
 const SPLIT_BOUNDARIES = ["\n\n", "\n", " "];
 
 function findSplitPoint(text: string, idealEnd: number): number {

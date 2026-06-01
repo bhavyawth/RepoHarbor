@@ -235,9 +235,13 @@ export const ingestRepo = async (req: Request, res: Response) => {
       console.error(`[ingestRepo] Indexing failed for ${indexingRepo.owner}/${indexingRepo.name}:`, errorMessage);
       try {
         clearCancelled(indexingRepo._id.toString());
+        // Sanitize quota limit errors
+        const dbErrorMessage = (errorMessage.includes("429") || errorMessage.includes("quota") || errorMessage.includes("RESOURCE_EXHAUSTED"))
+          ? "Processing is unavailable at the moment due to current usage limits"
+          : errorMessage;
         await Repo.findByIdAndUpdate(indexingRepo._id, {
           indexStatus: "failed",
-          indexError: errorMessage,
+          indexError: dbErrorMessage,
         });
       } catch (updateError: unknown) {
         console.error(`[ingestRepo] Failed to update repo status:`, getErrorMessage(updateError));
